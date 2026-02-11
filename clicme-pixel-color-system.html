@@ -24,8 +24,8 @@
   .date { font-size: 11px; color: var(--ghost); margin-top: 10px; }
 
   /* Nav */
-  .nav { position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #0a0a0f 70%, transparent); padding: 12px 0 20px; display: flex; gap: 5px; flex-wrap: wrap; }
-  .nav button { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; font-size: 10px; font-weight: 600; color: var(--dimmer); cursor: pointer; font-family: var(--sans); }
+  .nav { position: sticky; top: 0; z-index: 10; background: linear-gradient(180deg, #0a0a0f 80%, transparent); padding: 12px 0 26px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .nav button { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 6px; padding: 5px 11px; font-size: 10px; font-weight: 600; color: var(--dimmer); cursor: pointer; font-family: var(--sans); transition: all 0.2s ease; }
   .nav button.on { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--accent); }
 
   /* Sections */
@@ -237,7 +237,7 @@
       <div class="lbl">Przesunięcie kolorów wyjściowych i rozszerzenie krawędzi</div>
       <p class="tx">VS-02 operuje od navy #000066 (L*=9) do brand red #E30613 (L*=48). Pierwotnym założeniem było zachowanie tych kolorów brandingowych na skrajach skali. W praktyce okazało się to nieefektywne z dwóch powodów:</p>
       <p class="tx"><strong>Po pierwsze</strong> — wartości ekstremalne stanowią marginalny udział w danych. Większość pixeli na mapie skupia się wokół median i wartości umiarkowanych. Kolory na krawędziach skali pojawiają się rzadko, niezależnie od tego jakie są.</p>
-      <p class="tx"><strong>Po drugie</strong> — przy opacity 0.7 i nałożeniu na baselayer mapy, kolory i tak tracą swoją oryginalną charakterystykę na tyle, że rozpoznawalność brandingowa nie jest realistycznym celem dla skali kartograficznej.</p>
+      <p class="tx"><strong>Po drugie</strong> — przy opacity (wymóg dla pixeli) i nałożeniu na baselayer mapy, kolory i tak tracą swoją oryginalną charakterystykę na tyle, że rozpoznawalność brandingowa nie jest realistycznym celem dla skali kartograficznej.</p>
       <p class="tx">Zamiast tego postawiliśmy na <strong>maksymalne nacechowanie krawędzi skali</strong>: wyciągnięcie ekstremalnych stepów w ciemniejsze barwy, znacznie wykraczające poza oryginalną selekcję LISER. Ciemniejsze ekstrema dają silniejszy kontrast wizualny — nawet jeśli pojawiają się rzadko, to gdy się pojawią, natychmiast przyciągają uwagę i sygnalizują wartości skrajne. Kolory wyjściowe LISER (navy, brand red) przesunęły się naturalnie w strefę mid-range, gdzie gromadzi się najwięcej danych i gdzie są najczęściej widoczne.</p>
     </div>
 
@@ -525,13 +525,27 @@ function makeHue(id,colors){
 document.addEventListener('DOMContentLoaded',()=>{
   // Nav
   const tabs=[['proposals','Propozycje LISER'],['vs02','Wybór VS-02'],['extension','Rozszerzenie'],['perception','Percepcja'],['lut','Korekty LUT'],['opacity','Opacity'],['mosaic','Symulacja'],['result','Wynik']];
-  const nav=document.getElementById('nav');
+    const nav=document.getElementById('nav');
+  const navButtons={};
   tabs.forEach(([id,lbl])=>{
     const b=document.createElement('button');b.textContent=lbl;
     b.onclick=()=>{nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.getElementById(id)?.scrollIntoView({behavior:'smooth'});};
     nav.appendChild(b);
+    navButtons[id]=b;
   });
   nav.querySelector('button').classList.add('on');
+
+  // Scroll-tracking: highlight when section header passes near top
+  const sectionIds=tabs.map(t=>t[0]);
+  window.addEventListener('scroll',()=>{
+    let current=sectionIds[0];
+    for(const id of sectionIds){
+      const el=document.getElementById(id);
+      if(el && el.getBoundingClientRect().top<=80) current=id;
+    }
+    nav.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    if(navButtons[current]) navButtons[current].classList.add('on');
+  });
 
   // Gradients
   makeGrad('g-vs01',['#000066','#D9D9D9','#E30613']);
