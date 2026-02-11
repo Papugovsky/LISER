@@ -233,8 +233,13 @@
   <div class="sec" id="extension">
     <div class="sec-head"><span class="sec-num">03</span><h2>Rozszerzenie zakresu tonalnego</h2></div>
 
-    <p class="tx">VS-02 operuje od navy #000066 (L*=9) do brand red #E30613 (L*=48). Mapy dostępne obecnie w ramach dashboardu CliC:ME mają różne rozpiętości danych — na potrzeby opracowania skali przyjęliśmy roboczy zakres od -1000 do +1000. W takim zakresie jest niewystarczający: <strong>stepy w ciemnych tonach zlewają się percepcyjnie</strong> — po obu stronach skali.</p>
+    <div class="card">
+      <div class="lbl">Problem: kolory brandingowe na krawędziach skali</div>
+      <p class="tx">VS-02 operuje od navy #000066 (L*=9) do brand red #E30613 (L*=48). Jeśli te kolory pozostaną na skrajach skali (mapowanych na ekstrema danych), to w praktyce <strong>prawie nigdy się nie pojawią</strong> — wartości ekstremalne stanowią marginalny udział w każdym zbiorze danych. Większość pixeli na mapie skupia się wokół median i wartości umiarkowanych. Kolory brandingowe, które miały definiować tożsamość skali, byłyby niewidoczne.</p>
+      <p class="tx">Rozwiązanie: <strong>przesunięcie kolorów brandingowych bliżej median</strong> (w strefę mid-range skali, gdzie gromadzi się większość danych) oraz <strong>wyciągnięcie krawędzi skali w ciemniejsze barwy</strong> wykraczające poza oryginalną selekcję LISER. Dzięki temu brand red i navy blue pojawiają się w strefie, którą użytkownik faktycznie widzi najczęściej, a ekstrema zyskują dedykowane, ciemniejsze tony.</p>
+    </div>
 
+    <p class="tx">Mapy dostępne obecnie w ramach dashboardu CliC:ME mają różne rozpiętości danych — na potrzeby opracowania skali przyjęliśmy roboczy zakres od -1000 do +1000. Oryginalna selekcja LISER była zbyt wąska: po rozciągnięciu na 33 stepy <strong>ciemne tony zlewają się percepcyjnie</strong> — po obu stronach skali. Poniżej konkretne problemy i efekt rozszerzenia.</p>
     <div class="card">
       <div class="lbl">Strona niebieska (wartości ujemne)</div>
 
