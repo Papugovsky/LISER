@@ -234,10 +234,14 @@
     <div class="sec-head"><span class="sec-num">03</span><h2>Rozszerzenie zakresu tonalnego</h2></div>
 
     <div class="card">
-      <div class="lbl">Problem: kolory brandingowe na krawędziach skali</div>
-      <p class="tx">VS-02 operuje od navy #000066 (L*=9) do brand red #E30613 (L*=48). Jeśli te kolory pozostaną na skrajach skali (mapowanych na ekstrema danych), to w praktyce <strong>prawie nigdy się nie pojawią</strong> — wartości ekstremalne stanowią marginalny udział w każdym zbiorze danych. Większość pixeli na mapie skupia się wokół median i wartości umiarkowanych. Kolory brandingowe, które miały definiować tożsamość skali, byłyby niewidoczne.</p>
-      <p class="tx">Rozwiązanie: <strong>przesunięcie kolorów brandingowych bliżej median</strong> (w strefę mid-range skali, gdzie gromadzi się większość danych) oraz <strong>wyciągnięcie krawędzi skali w ciemniejsze barwy</strong> wykraczające poza oryginalną selekcję LISER. Dzięki temu brand red i navy blue pojawiają się w strefie, którą użytkownik faktycznie widzi najczęściej, a ekstrema zyskują dedykowane, ciemniejsze tony.</p>
+      <div class="lbl">Przesunięcie kolorów wyjściowych i rozszerzenie krawędzi</div>
+      <p class="tx">VS-02 operuje od navy #000066 (L*=9) do brand red #E30613 (L*=48). Pierwotnym założeniem było zachowanie tych kolorów brandingowych na skrajach skali. W praktyce okazało się to nieefektywne z dwóch powodów:</p>
+      <p class="tx"><strong>Po pierwsze</strong> — wartości ekstremalne stanowią marginalny udział w danych. Większość pixeli na mapie skupia się wokół median i wartości umiarkowanych. Kolory na krawędziach skali pojawiają się rzadko, niezależnie od tego jakie są.</p>
+      <p class="tx"><strong>Po drugie</strong> — przy opacity 0.7 i nałożeniu na baselayer mapy, kolory i tak tracą swoją oryginalną charakterystykę na tyle, że rozpoznawalność brandingowa nie jest realistycznym celem dla skali kartograficznej.</p>
+      <p class="tx">Zamiast tego postawiliśmy na <strong>maksymalne nacechowanie krawędzi skali</strong>: wyciągnięcie ekstremalnych stepów w ciemniejsze barwy, znacznie wykraczające poza oryginalną selekcję LISER. Ciemniejsze ekstrema dają silniejszy kontrast wizualny — nawet jeśli pojawiają się rzadko, to gdy się pojawią, natychmiast przyciągają uwagę i sygnalizują wartości skrajne. Kolory wyjściowe LISER (navy, brand red) przesunęły się naturalnie w strefę mid-range, gdzie gromadzi się najwięcej danych i gdzie są najczęściej widoczne.</p>
     </div>
+
+    <p class="tx">Mapy dostępne obecnie w ramach dashboardu CliC:ME mają różne rozpiętości danych — na potrzeby opracowania skali przyjęliśmy roboczy zakres od -1000 do +1000. Po rozciągnięciu oryginalnej selekcji na 33 stepy <strong>ciemne tony zlewają się percepcyjnie</strong> — po obu stronach skali. Poniżej konkretne problemy i efekt rozszerzenia.</p>
 
     <p class="tx">Mapy dostępne obecnie w ramach dashboardu CliC:ME mają różne rozpiętości danych — na potrzeby opracowania skali przyjęliśmy roboczy zakres od -1000 do +1000. Oryginalna selekcja LISER była zbyt wąska: po rozciągnięciu na 33 stepy <strong>ciemne tony zlewają się percepcyjnie</strong> — po obu stronach skali. Poniżej konkretne problemy i efekt rozszerzenia.</p>
     <div class="card">
