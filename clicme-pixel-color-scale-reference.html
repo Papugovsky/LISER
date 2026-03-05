@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CliC:ME — Porównanie skal M1</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; color: #222; padding: 2rem 1rem; }
+  .container { max-width: 1040px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: visible; }
+  
+  header { padding: 2rem 2rem 1.5rem; border-bottom: 1px solid #eee; }
+  header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: .35rem; }
+  header p { font-size: .8rem; color: #777; line-height: 1.6; }
+  header .tag { display: inline-block; background: #f0f0f0; border-radius: 4px; padding: 2px 8px; font-size: .7rem; color: #555; margin-top: .5rem; margin-right: .3rem; }
+  
+  .gradient { padding: 1.2rem 2rem; border-bottom: 1px solid #eee; }
+  .gradient-label { font-size: .65rem; color: #999; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
+  .gradient-bar { display: flex; height: 28px; border-radius: 4px; overflow: hidden; }
+  .gradient-bar .seg { flex: 1; cursor: crosshair; transition: transform .1s; }
+  .gradient-bar .seg:hover { transform: scaleY(1.5); z-index: 1; }
+  .gradient-ticks { display: flex; justify-content: space-between; margin-top: .3rem; font-size: .6rem; color: #aaa; font-family: "SF Mono", Consolas, monospace; }
+  
+  .picker { padding: 1rem 2rem; border-bottom: 1px solid #eee; }
+  .picker .label { font-size: .7rem; color: #999; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; display: block; }
+  .picker .buttons { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .picker button { padding: .45rem 1rem; border: 2px solid #ddd; background: #fff; border-radius: 6px; font-size: .72rem; cursor: pointer; color: #555; transition: all .15s; font-weight: 500; }
+  .picker button:hover { border-color: #aaa; background: #fafafa; }
+  .picker button.active { background: #222; color: #fff; border-color: #222; }
+  
+  .info-bar { padding: .7rem 2rem; background: #f8f9fa; border-bottom: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: center; }
+  .info-bar .item { font-size: .75rem; color: #666; }
+  .info-bar .item strong { color: #222; }
+  .info-bar .variant-desc { font-size: .72rem; color: #887740; background: #fffbe6; padding: 4px 10px; border-radius: 4px; flex: 1 1 100%; margin-top: .3rem; line-height: 1.4; }
+  
+  .chart-section { padding: 1.5rem 2rem; border-bottom: 1px solid #eee; overflow: visible; }
+  .chart-section h2 { font-size: .85rem; font-weight: 600; margin-bottom: .3rem; }
+  .chart-section .sub { font-size: .7rem; color: #999; margin-bottom: 1rem; }
+  .chart-container { position: relative; height: 320px; padding-top: 60px; }
+  .chart-canvas { width: 100%; height: 240px; display: flex; align-items: flex-end; gap: 1px; overflow: visible; }
+  .chart-canvas .col { flex: 1; border-radius: 2px 2px 0 0; position: relative; cursor: pointer; transition: opacity .15s; min-width: 0; }
+  .chart-canvas .col:hover { opacity: .8; }
+  .chart-canvas .col .tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 5px 9px; border-radius: 4px; font-size: .62rem; white-space: nowrap; z-index: 100; pointer-events: none; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .chart-canvas .col .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #222; }
+  .chart-canvas .col:hover .tooltip { display: block; }
+  .chart-canvas .col:nth-child(-n+4) .tooltip { left: 0; transform: none; }
+  .chart-canvas .col:nth-child(-n+4) .tooltip::after { left: 12px; transform: none; }
+  .chart-canvas .col:nth-last-child(-n+4) .tooltip { left: auto; right: 0; transform: none; }
+  .chart-canvas .col:nth-last-child(-n+4) .tooltip::after { left: auto; right: 12px; transform: none; }
+  .chart-gridlines { position: absolute; top: 60px; left: 0; width: 100%; height: 240px; pointer-events: none; }
+  .chart-gridlines .gl { position: absolute; left: 0; width: 100%; border-top: 1px dashed #eee; }
+  .chart-gridlines .gl-label { position: absolute; right: 4px; transform: translateY(-50%); font-size: .5rem; color: #ccc; font-family: "SF Mono", Consolas, monospace; }
+  .chart-x { display: flex; justify-content: space-between; margin-top: .3rem; font-size: .55rem; color: #aaa; font-family: "SF Mono", Consolas, monospace; }
+  
+  .summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-bottom: 1px solid #eee; }
+  .zone { padding: 1rem .5rem; text-align: center; border-right: 1px solid #f0f0f0; }
+  .zone:last-child { border-right: none; }
+  .zone .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+  .zone .val { font-size: 1.2rem; font-weight: 700; display: block; margin-bottom: .15rem; }
+  .zone .lbl { font-size: .58rem; color: #888; text-transform: uppercase; letter-spacing: .03em; line-height: 1.3; }
+  
+  .table-wrap { padding: 1rem 1.5rem 1.5rem; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+  th { text-align: left; font-weight: 600; font-size: .6rem; text-transform: uppercase; letter-spacing: .05em; color: #999; padding: .6rem .4rem; border-bottom: 2px solid #eee; white-space: nowrap; }
+  th.r { text-align: right; }
+  tr.row td { padding: .32rem .4rem; border-bottom: 1px solid #f7f7f7; vertical-align: middle; }
+  tr.row:hover td { background: #f9f9fb; }
+  tr.center td { background: #fffce8; }
+  tr.center:hover td { background: #fff8d0; }
+  .idx { color: #bbb; font-size: .65rem; width: 22px; }
+  .swatch { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .66rem; font-family: "SF Mono", Consolas, monospace; min-width: 72px; text-align: center; }
+  .bp { font-family: "SF Mono", Consolas, monospace; font-size: .68rem; color: #333; white-space: nowrap; font-weight: 500; }
+  .range { font-family: "SF Mono", Consolas, monospace; font-size: .64rem; color: #999; white-space: nowrap; }
+  .cnt { text-align: right; font-family: "SF Mono", Consolas, monospace; font-size: .66rem; color: #aaa; }
+  .pct { text-align: right; white-space: nowrap; color: #555; min-width: 52px; font-family: "SF Mono", Consolas, monospace; font-size: .7rem; }
+  .pct.bold { font-weight: 700; color: #222; }
+  .bar-cell { width: 24%; }
+  .bar { height: 11px; border-radius: 2px; min-width: 2px; }
+  
+  footer { padding: 1rem 2rem; border-top: 1px solid #eee; font-size: .65rem; color: #aaa; display: flex; justify-content: space-between; }
+  
+  @media (max-width: 700px) {
+    body { padding: .5rem; }
+    header, .table-wrap, .chart-section, .picker { padding: 1rem; }
+    .summary { grid-template-columns: repeat(3, 1fr); }
+    .bar-cell, th:last-child { display: none; }
+    .cnt, th:nth-child(5) { display: none; }
+    .range { display: none; }
+    th:nth-child(4) { display: none; }
+    .chart-container { height: 260px; padding-top: 50px; }
+    .chart-canvas { height: 180px; }
+    .chart-gridlines { height: 180px; top: 50px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  
+  <header>
+    <h1>M1 — Porównanie skal kolorystycznych</h1>
+    <p>Migracja netto &middot; RCP 8.5 &middot; 2090 &middot; 33 kolory &middot; Ta sama paleta, różne rozkłady progów.</p>
+    <span class="tag">Piksele: 2 379 924</span>
+    <span class="tag">Zakres danych: &minus;276 516 do +429 267</span>
+    <span class="tag">99% danych w &plusmn;1 531</span>
+  </header>
+  
+  <div class="gradient">
+    <div class="gradient-label">Paleta (wspólna dla wszystkich wariantów)</div>
+    <div class="gradient-bar" id="gradientBar"></div>
+    <div class="gradient-ticks" id="gradientTicks"></div>
+  </div>
+  
+  <div class="picker">
+    <span class="label">Wariant skali</span>
+    <div class="buttons">
+      <button onclick="setVariant('lin')">Liniowa</button>
+      <button onclick="setVariant('log')">Logarytmiczna</button>
+      <button onclick="setVariant('log2')">Exponencjalna</button>
+      <button onclick="setVariant('quant1')">Kwantylowa v1</button>
+      <button onclick="setVariant('quant2')">Kwantylowa v2</button>
+      <button class="active" onclick="setVariant('pow')">Krzywa potęgowa</button>
+    </div>
+  </div>
+  
+  <div class="info-bar" id="infobar"></div>
+  
+  <div class="chart-section">
+    <h2>Rozkład danych na kolory</h2>
+    <div class="sub">Każdy słupek = jeden z 33 kolorów. Wysokość = % pikseli przypisanych do tego koloru.</div>
+    <div class="chart-container">
+      <div class="chart-gridlines" id="gridlines"></div>
+      <div class="chart-canvas" id="chart"></div>
+    </div>
+    <div class="chart-x" id="chartX"></div>
+  </div>
+  
+  <div class="summary" id="summary"></div>
+  
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Kolor</th>
+          <th>Próg</th>
+          <th>Zakres binu</th>
+          <th class="r">Piksele</th>
+          <th class="r">Udział</th>
+          <th>Rozkład</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  
+  <footer>
+    <span>CliC:ME &mdash; LISER</span>
+    <span>Autentika 2026</span>
+  </footer>
+  
+</div>
+
+<script>
+const DATA = {"lin": {"bins": [{"idx": 1, "bp": -90, "color": "#0C0343", "lo": -90, "hi": -85.0, "count": 12464, "pct": 0.5237}, {"idx": 2, "bp": -80, "color": "#070B51", "lo": -85.0, "hi": -75.0, "count": 27433, "pct": 1.1527}, {"idx": 3, "bp": -70, "color": "#001361", "lo": -75.0, "hi": -65.0, "count": 31339, "pct": 1.3168}, {"idx": 4, "bp": -60, "color": "#001A6E", "lo": -65.0, "hi": -55.0, "count": 37195, "pct": 1.5629}, {"idx": 5, "bp": -50, "color": "#00227A", "lo": -55.0, "hi": -47.5, "count": 32712, "pct": 1.3745}, {"idx": 6, "bp": -45, "color": "#002B88", "lo": -47.5, "hi": -42.5, "count": 23864, "pct": 1.0027}, {"idx": 7, "bp": -40, "color": "#003596", "lo": -42.5, "hi": -37.5, "count": 25622, "pct": 1.0766}, {"idx": 8, "bp": -35, "color": "#003FA2", "lo": -37.5, "hi": -32.5, "count": 27824, "pct": 1.1691}, {"idx": 9, "bp": -30, "color": "#004AAE", "lo": -32.5, "hi": -27.5, "count": 30745, "pct": 1.2918}, {"idx": 10, "bp": -25, "color": "#0054B8", "lo": -27.5, "hi": -22.5, "count": 35018, "pct": 1.4714}, {"idx": 11, "bp": -20, "color": "#0061C6", "lo": -22.5, "hi": -17.5, "count": 42614, "pct": 1.7906}, {"idx": 12, "bp": -15, "color": "#0074D9", "lo": -17.5, "hi": -12.5, "count": 57261, "pct": 2.406}, {"idx": 13, "bp": -10, "color": "#0089F0", "lo": -12.5, "hi": -7.5, "count": 79875, "pct": 3.3562}, {"idx": 14, "bp": -5, "color": "#009EFC", "lo": -7.5, "hi": -3.5, "count": 80755, "pct": 3.3932}, {"idx": 15, "bp": -2, "color": "#00B2FF", "lo": -3.5, "hi": -1.5, "count": 56366, "pct": 2.3684}, {"idx": 16, "bp": -1, "color": "#4DC3FF", "lo": -1.5, "hi": -0.5, "count": 39418, "pct": 1.6563}, {"idx": 17, "bp": 0, "color": "#EDEDED", "lo": -0.5, "hi": 0.5, "count": 64550, "pct": 2.7123}, {"idx": 18, "bp": 1, "color": "#FEA274", "lo": 0.5, "hi": 1.5, "count": 48053, "pct": 2.0191}, {"idx": 19, "bp": 2, "color": "#F98657", "lo": 1.5, "hi": 3.5, "count": 70722, "pct": 2.9716}, {"idx": 20, "bp": 5, "color": "#EF663D", "lo": 3.5, "hi": 7.5, "count": 110197, "pct": 4.6303}, {"idx": 21, "bp": 10, "color": "#E64328", "lo": 7.5, "hi": 12.5, "count": 90808, "pct": 3.8156}, {"idx": 22, "bp": 15, "color": "#DC1915", "lo": 12.5, "hi": 17.5, "count": 67102, "pct": 2.8195}, {"idx": 23, "bp": 20, "color": "#D7000B", "lo": 17.5, "hi": 22.5, "count": 59370, "pct": 2.4946}, {"idx": 24, "bp": 25, "color": "#D0000E", "lo": 22.5, "hi": 27.5, "count": 59226, "pct": 2.4886}, {"idx": 25, "bp": 30, "color": "#C20011", "lo": 27.5, "hi": 32.5, "count": 50327, "pct": 2.1146}, {"idx": 26, "bp": 35, "color": "#B50011", "lo": 32.5, "hi": 37.5, "count": 44612, "pct": 1.8745}, {"idx": 27, "bp": 40, "color": "#A70012", "lo": 37.5, "hi": 42.5, "count": 40870, "pct": 1.7173}, {"idx": 28, "bp": 45, "color": "#960011", "lo": 42.5, "hi": 47.5, "count": 36081, "pct": 1.5161}, {"idx": 29, "bp": 50, "color": "#840012", "lo": 47.5, "hi": 55.0, "count": 48016, "pct": 2.0175}, {"idx": 30, "bp": 60, "color": "#730011", "lo": 55.0, "hi": 65.0, "count": 51481, "pct": 2.1631}, {"idx": 31, "bp": 70, "color": "#610010", "lo": 65.0, "hi": 75.0, "count": 41898, "pct": 1.7605}, {"idx": 32, "bp": 80, "color": "#4F010E", "lo": 75.0, "hi": 85.0, "count": 35799, "pct": 1.5042}, {"idx": 33, "bp": 90, "color": "#3E040B", "lo": 85.0, "hi": 90, "count": 16555, "pct": 0.6956}], "outBelow": 367922, "outAbove": 435830, "outPct": 33.7722, "rangeMin": -90, "rangeMax": 90}, "log": {"bins": [{"idx": 1, "bp": -100000, "color": "#0C0343", "lo": -100000, "hi": -75000.0, "count": 56, "pct": 0.0024}, {"idx": 2, "bp": -50000, "color": "#070B51", "lo": -75000.0, "hi": -35000.0, "count": 222, "pct": 0.0093}, {"idx": 3, "bp": -20000, "color": "#001361", "lo": -35000.0, "hi": -15000.0, "count": 620, "pct": 0.0261}, {"idx": 4, "bp": -10000, "color": "#001A6E", "lo": -15000.0, "hi": -7500.0, "count": 1873, "pct": 0.0787}, {"idx": 5, "bp": -5000, "color": "#00227A", "lo": -7500.0, "hi": -3500.0, "count": 5852, "pct": 0.2459}, {"idx": 6, "bp": -2000, "color": "#002B88", "lo": -3500.0, "hi": -1500.0, "count": 16395, "pct": 0.6889}, {"idx": 7, "bp": -1000, "color": "#003596", "lo": -1500.0, "hi": -875.0, "count": 23029, "pct": 0.9676}, {"idx": 8, "bp": -750, "color": "#003FA2", "lo": -875.0, "hi": -625.0, "count": 22326, "pct": 0.9381}, {"idx": 9, "bp": -500, "color": "#004AAE", "lo": -625.0, "hi": -400.0, "count": 42135, "pct": 1.7704}, {"idx": 10, "bp": -300, "color": "#0054B8", "lo": -400.0, "hi": -250.0, "count": 62673, "pct": 2.6334}, {"idx": 11, "bp": -200, "color": "#0061C6", "lo": -250.0, "hi": -150.0, "count": 88750, "pct": 3.7291}, {"idx": 12, "bp": -100, "color": "#0074D9", "lo": -150.0, "hi": -75.0, "count": 143832, "pct": 6.0436}, {"idx": 13, "bp": -50, "color": "#0089F0", "lo": -75.0, "hi": -35.0, "count": 164250, "pct": 6.9015}, {"idx": 14, "bp": -20, "color": "#009EFC", "lo": -35.0, "hi": -15.0, "count": 148978, "pct": 6.2598}, {"idx": 15, "bp": -10, "color": "#00B2FF", "lo": -15.0, "hi": -7.5, "count": 110841, "pct": 4.6573}, {"idx": 16, "bp": -5, "color": "#4DC3FF", "lo": -7.5, "hi": -2.5, "count": 106896, "pct": 4.4916}, {"idx": 17, "bp": 0, "color": "#EDEDED", "lo": -2.5, "hi": 2.5, "count": 219289, "pct": 9.2141}, {"idx": 18, "bp": 5, "color": "#FEA274", "lo": 2.5, "hi": 7.5, "count": 143876, "pct": 6.0454}, {"idx": 19, "bp": 10, "color": "#F98657", "lo": 7.5, "hi": 15.0, "count": 126074, "pct": 5.2974}, {"idx": 20, "bp": 20, "color": "#EF663D", "lo": 15.0, "hi": 35.0, "count": 223443, "pct": 9.3887}, {"idx": 21, "bp": 50, "color": "#E64328", "lo": 35.0, "hi": 75.0, "count": 240274, "pct": 10.0959}, {"idx": 22, "bp": 100, "color": "#DC1915", "lo": 75.0, "hi": 150.0, "count": 191712, "pct": 8.0554}, {"idx": 23, "bp": 200, "color": "#D7000B", "lo": 150.0, "hi": 250.0, "count": 99988, "pct": 4.2013}, {"idx": 24, "bp": 300, "color": "#D0000E", "lo": 250.0, "hi": 400.0, "count": 71661, "pct": 3.0111}, {"idx": 25, "bp": 500, "color": "#C20011", "lo": 400.0, "hi": 625.0, "count": 53803, "pct": 2.2607}, {"idx": 26, "bp": 750, "color": "#B50011", "lo": 625.0, "hi": 875.0, "count": 23461, "pct": 0.9858}, {"idx": 27, "bp": 1000, "color": "#A70012", "lo": 875.0, "hi": 1500.0, "count": 23110, "pct": 0.971}, {"idx": 28, "bp": 2000, "color": "#960011", "lo": 1500.0, "hi": 3500.0, "count": 16609, "pct": 0.6979}, {"idx": 29, "bp": 5000, "color": "#840012", "lo": 3500.0, "hi": 7500.0, "count": 5579, "pct": 0.2344}, {"idx": 30, "bp": 10000, "color": "#730011", "lo": 7500.0, "hi": 15000.0, "count": 1634, "pct": 0.0687}, {"idx": 31, "bp": 20000, "color": "#610010", "lo": 15000.0, "hi": 35000.0, "count": 513, "pct": 0.0216}, {"idx": 32, "bp": 50000, "color": "#4F010E", "lo": 35000.0, "hi": 75000.0, "count": 67, "pct": 0.0028}, {"idx": 33, "bp": 100000, "color": "#3E040B", "lo": 75000.0, "hi": 100000, "count": 15, "pct": 0.0006}], "outBelow": 56, "outAbove": 32, "outPct": 0.0037, "rangeMin": -100000, "rangeMax": 100000}, "log2": {"bins": [{"idx": 1, "bp": -442413, "color": "#0C0343", "lo": -442413, "hi": -302583.5, "count": 0, "pct": 0.0}, {"idx": 2, "bp": -162754, "color": "#070B51", "lo": -302583.5, "hi": -111314.0, "count": 50, "pct": 0.0021}, {"idx": 3, "bp": -59874, "color": "#001361", "lo": -111314.0, "hi": -40950.0, "count": 211, "pct": 0.0089}, {"idx": 4, "bp": -22026, "color": "#001A6E", "lo": -40950.0, "hi": -15064.5, "count": 690, "pct": 0.029}, {"idx": 5, "bp": -8103, "color": "#00227A", "lo": -15064.5, "hi": -5541.5, "count": 3507, "pct": 0.1474}, {"idx": 6, "bp": -2980, "color": "#002B88", "lo": -5541.5, "hi": -2038.0, "count": 12943, "pct": 0.5438}, {"idx": 7, "bp": -1096, "color": "#003596", "lo": -2038.0, "hi": -749.5, "count": 39995, "pct": 1.6805}, {"idx": 8, "bp": -403, "color": "#003FA2", "lo": -749.5, "hi": -275.5, "count": 103327, "pct": 4.3416}, {"idx": 9, "bp": -148, "color": "#004AAE", "lo": -275.5, "hi": -101.0, "count": 182576, "pct": 7.6715}, {"idx": 10, "bp": -54, "color": "#0054B8", "lo": -101.0, "hi": -43.5, "count": 184761, "pct": 7.7633}, {"idx": 11, "bp": -33, "color": "#0061C6", "lo": -43.5, "hi": -26.5, "count": 95723, "pct": 4.0221}, {"idx": 12, "bp": -20, "color": "#0074D9", "lo": -26.5, "hi": -16.0, "count": 86140, "pct": 3.6194}, {"idx": 13, "bp": -12, "color": "#0089F0", "lo": -16.0, "hi": -9.5, "count": 86485, "pct": 3.6339}, {"idx": 14, "bp": -7, "color": "#009EFC", "lo": -9.5, "hi": -5.5, "count": 72825, "pct": 3.06}, {"idx": 15, "bp": -4, "color": "#00B2FF", "lo": -5.5, "hi": -3.0, "count": 55810, "pct": 2.345}, {"idx": 16, "bp": -2, "color": "#4DC3FF", "lo": -3.0, "hi": -1.0, "count": 61807, "pct": 2.597}, {"idx": 17, "bp": 0, "color": "#EDEDED", "lo": -1.0, "hi": 1.0, "count": 112028, "pct": 4.7072}, {"idx": 18, "bp": 2, "color": "#FEA274", "lo": 1.0, "hi": 3.0, "count": 76322, "pct": 3.2069}, {"idx": 19, "bp": 4, "color": "#F98657", "lo": 3.0, "hi": 5.5, "count": 77023, "pct": 3.2364}, {"idx": 20, "bp": 7, "color": "#EF663D", "lo": 5.5, "hi": 9.5, "count": 90120, "pct": 3.7867}, {"idx": 21, "bp": 12, "color": "#E64328", "lo": 9.5, "hi": 16.0, "count": 98651, "pct": 4.1451}, {"idx": 22, "bp": 20, "color": "#DC1915", "lo": 16.0, "hi": 26.5, "count": 126013, "pct": 5.2948}, {"idx": 23, "bp": 33, "color": "#D7000B", "lo": 26.5, "hi": 43.5, "count": 154883, "pct": 6.5079}, {"idx": 24, "bp": 54, "color": "#D0000E", "lo": 43.5, "hi": 101.0, "count": 254781, "pct": 10.7054}, {"idx": 25, "bp": 148, "color": "#C20011", "lo": 101.0, "hi": 275.5, "count": 221838, "pct": 9.3212}, {"idx": 26, "bp": 403, "color": "#B50011", "lo": 275.5, "hi": 749.5, "count": 124376, "pct": 5.226}, {"idx": 27, "bp": 1096, "color": "#A70012", "lo": 749.5, "hi": 2038.0, "count": 40765, "pct": 1.7129}, {"idx": 28, "bp": 2980, "color": "#960011", "lo": 2038.0, "hi": 5541.5, "count": 12477, "pct": 0.5243}, {"idx": 29, "bp": 8103, "color": "#840012", "lo": 5541.5, "hi": 15064.5, "count": 3178, "pct": 0.1335}, {"idx": 30, "bp": 22026, "color": "#730011", "lo": 15064.5, "hi": 40950.0, "count": 517, "pct": 0.0217}, {"idx": 31, "bp": 59874, "color": "#610010", "lo": 40950.0, "hi": 111314.0, "count": 87, "pct": 0.0037}, {"idx": 32, "bp": 162754, "color": "#4F010E", "lo": 111314.0, "hi": 302583.5, "count": 13, "pct": 0.0005}, {"idx": 33, "bp": 442413, "color": "#3E040B", "lo": 302583.5, "hi": 442413, "count": 2, "pct": 0.0001}], "outBelow": 0, "outAbove": 0, "outPct": 0.0, "rangeMin": -442413, "rangeMax": 442413}, "quant1": {"bins": [{"idx": 1, "bp": -909.85, "color": "#0C0343", "lo": -909.85, "hi": -739.49, "count": 12290, "pct": 0.5164}, {"idx": 2, "bp": -569.14, "color": "#070B51", "lo": -739.49, "hi": -535.79, "count": 24885, "pct": 1.0456}, {"idx": 3, "bp": -502.45, "color": "#001361", "lo": -535.79, "hi": -452.43, "count": 16259, "pct": 0.6832}, {"idx": 4, "bp": -402.41, "color": "#001A6E", "lo": -452.43, "hi": -357.97, "count": 26185, "pct": 1.1002}, {"idx": 5, "bp": -313.53, "color": "#00227A", "lo": -357.97, "hi": -283.54, "count": 30918, "pct": 1.2991}, {"idx": 6, "bp": -253.56, "color": "#002B88", "lo": -283.54, "hi": -229.73, "count": 32022, "pct": 1.3455}, {"idx": 7, "bp": -205.9, "color": "#003596", "lo": -229.73, "hi": -185.46, "count": 36283, "pct": 1.5245}, {"idx": 8, "bp": -165.01, "color": "#003FA2", "lo": -185.46, "hi": -146.65, "count": 43365, "pct": 1.8221}, {"idx": 9, "bp": -128.29, "color": "#004AAE", "lo": -146.65, "hi": -111.28, "count": 54858, "pct": 2.305}, {"idx": 10, "bp": -94.27, "color": "#0054B8", "lo": -111.28, "hi": -78.12, "count": 75784, "pct": 3.1843}, {"idx": 11, "bp": -61.98, "color": "#0061C6", "lo": -78.12, "hi": -55.69, "count": 74779, "pct": 3.1421}, {"idx": 12, "bp": -49.39, "color": "#0074D9", "lo": -55.69, "hi": -43.16, "count": 56019, "pct": 2.3538}, {"idx": 13, "bp": -36.93, "color": "#0089F0", "lo": -43.16, "hi": -30.75, "count": 67218, "pct": 2.8244}, {"idx": 14, "bp": -24.57, "color": "#009EFC", "lo": -30.75, "hi": -18.42, "count": 89100, "pct": 3.7438}, {"idx": 15, "bp": -12.27, "color": "#00B2FF", "lo": -18.42, "hi": -9.2, "count": 115414, "pct": 4.8495}, {"idx": 16, "bp": -6.13, "color": "#4DC3FF", "lo": -9.2, "hi": -3.07, "count": 121945, "pct": 5.1239}, {"idx": 17, "bp": 0.0, "color": "#EDEDED", "lo": -3.07, "hi": 3.07, "count": 254110, "pct": 10.6772}, {"idx": 18, "bp": 6.13, "color": "#FEA274", "lo": 3.07, "hi": 9.2, "count": 159174, "pct": 6.6882}, {"idx": 19, "bp": 12.27, "color": "#F98657", "lo": 9.2, "hi": 18.42, "count": 134463, "pct": 5.6499}, {"idx": 20, "bp": 24.57, "color": "#EF663D", "lo": 18.42, "hi": 30.75, "count": 141151, "pct": 5.9309}, {"idx": 21, "bp": 36.93, "color": "#E64328", "lo": 30.75, "hi": 43.16, "count": 107067, "pct": 4.4988}, {"idx": 22, "bp": 49.39, "color": "#DC1915", "lo": 43.16, "hi": 55.69, "count": 83104, "pct": 3.4919}, {"idx": 23, "bp": 61.98, "color": "#D7000B", "lo": 55.69, "hi": 78.12, "count": 100917, "pct": 4.2403}, {"idx": 24, "bp": 94.27, "color": "#D0000E", "lo": 78.12, "hi": 111.28, "count": 99907, "pct": 4.1979}, {"idx": 25, "bp": 128.29, "color": "#C20011", "lo": 111.28, "hi": 146.65, "count": 74403, "pct": 3.1263}, {"idx": 26, "bp": 165.01, "color": "#B50011", "lo": 146.65, "hi": 185.46, "count": 52996, "pct": 2.2268}, {"idx": 27, "bp": 205.9, "color": "#A70012", "lo": 185.46, "hi": 229.73, "count": 39247, "pct": 1.6491}, {"idx": 28, "bp": 253.56, "color": "#960011", "lo": 229.73, "hi": 283.54, "count": 33040, "pct": 1.3883}, {"idx": 29, "bp": 313.53, "color": "#840012", "lo": 283.54, "hi": 357.97, "count": 35285, "pct": 1.4826}, {"idx": 30, "bp": 402.41, "color": "#730011", "lo": 357.97, "hi": 452.43, "count": 34699, "pct": 1.458}, {"idx": 31, "bp": 502.45, "color": "#610010", "lo": 452.43, "hi": 535.79, "count": 21713, "pct": 0.9123}, {"idx": 32, "bp": 569.14, "color": "#4F010E", "lo": 535.79, "hi": 739.49, "count": 27309, "pct": 1.1475}, {"idx": 33, "bp": 909.85, "color": "#3E040B", "lo": 739.49, "hi": 909.85, "count": 12530, "pct": 0.5265}], "outBelow": 46031, "outAbove": 45454, "outPct": 3.844, "rangeMin": -909.85, "rangeMax": 909.85}, "quant2": {"bins": [{"idx": 1, "bp": -569.14, "color": "#0C0343", "lo": -569.14, "hi": -485.77, "count": 14344, "pct": 0.6027}, {"idx": 2, "bp": -402.41, "color": "#070B51", "lo": -485.77, "hi": -357.97, "count": 33336, "pct": 1.4007}, {"idx": 3, "bp": -313.53, "color": "#001361", "lo": -357.97, "hi": -259.71, "count": 43754, "pct": 1.8385}, {"idx": 4, "bp": -205.9, "color": "#001A6E", "lo": -259.71, "hi": -167.1, "count": 74346, "pct": 3.1239}, {"idx": 5, "bp": -128.29, "color": "#00227A", "lo": -167.1, "hi": -111.28, "count": 79346, "pct": 3.334}, {"idx": 6, "bp": -94.27, "color": "#002B88", "lo": -111.28, "hi": -78.12, "count": 75784, "pct": 3.1843}, {"idx": 7, "bp": -61.98, "color": "#003596", "lo": -78.12, "hi": -55.69, "count": 74779, "pct": 3.1421}, {"idx": 8, "bp": -49.39, "color": "#003FA2", "lo": -55.69, "hi": -43.16, "count": 56019, "pct": 2.3538}, {"idx": 9, "bp": -36.93, "color": "#004AAE", "lo": -43.16, "hi": -33.84, "count": 48876, "pct": 2.0537}, {"idx": 10, "bp": -30.74, "color": "#0054B8", "lo": -33.84, "hi": -27.66, "count": 37564, "pct": 1.5784}, {"idx": 11, "bp": -24.57, "color": "#0061C6", "lo": -27.66, "hi": -21.49, "count": 43722, "pct": 1.8371}, {"idx": 12, "bp": -18.41, "color": "#0074D9", "lo": -21.49, "hi": -15.34, "count": 57292, "pct": 2.4073}, {"idx": 13, "bp": -12.27, "color": "#0089F0", "lo": -15.34, "hi": -10.74, "count": 59808, "pct": 2.513}, {"idx": 14, "bp": -9.2, "color": "#009EFC", "lo": -10.74, "hi": -7.67, "count": 51919, "pct": 2.1815}, {"idx": 15, "bp": -6.13, "color": "#00B2FF", "lo": -7.67, "hi": -4.6, "count": 58771, "pct": 2.4694}, {"idx": 16, "bp": -3.07, "color": "#4DC3FF", "lo": -4.6, "hi": -1.53, "count": 80217, "pct": 3.3706}, {"idx": 17, "bp": 0.0, "color": "#EDEDED", "lo": -1.53, "hi": 1.53, "count": 154584, "pct": 6.4953}, {"idx": 18, "bp": 3.07, "color": "#FEA274", "lo": 1.53, "hi": 4.6, "count": 104171, "pct": 4.3771}, {"idx": 19, "bp": 6.13, "color": "#F98657", "lo": 4.6, "hi": 7.67, "count": 79142, "pct": 3.3254}, {"idx": 20, "bp": 9.2, "color": "#EF663D", "lo": 7.67, "hi": 10.74, "count": 58309, "pct": 2.45}, {"idx": 21, "bp": 12.27, "color": "#E64328", "lo": 10.74, "hi": 15.34, "count": 68497, "pct": 2.8781}, {"idx": 22, "bp": 18.41, "color": "#DC1915", "lo": 15.34, "hi": 21.49, "count": 74853, "pct": 3.1452}, {"idx": 23, "bp": 24.57, "color": "#D7000B", "lo": 21.49, "hi": 27.66, "count": 72818, "pct": 3.0597}, {"idx": 24, "bp": 30.74, "color": "#D0000E", "lo": 27.66, "hi": 33.84, "count": 60829, "pct": 2.5559}, {"idx": 25, "bp": 36.93, "color": "#C20011", "lo": 33.84, "hi": 43.16, "count": 78270, "pct": 3.2888}, {"idx": 26, "bp": 49.39, "color": "#B50011", "lo": 43.16, "hi": 55.69, "count": 83104, "pct": 3.4919}, {"idx": 27, "bp": 61.98, "color": "#A70012", "lo": 55.69, "hi": 78.12, "count": 100917, "pct": 4.2403}, {"idx": 28, "bp": 94.27, "color": "#960011", "lo": 78.12, "hi": 111.28, "count": 99907, "pct": 4.1979}, {"idx": 29, "bp": 128.29, "color": "#840012", "lo": 111.28, "hi": 167.1, "count": 105990, "pct": 4.4535}, {"idx": 30, "bp": 205.9, "color": "#730011", "lo": 167.1, "hi": 259.71, "count": 80094, "pct": 3.3654}, {"idx": 31, "bp": 313.53, "color": "#610010", "lo": 259.71, "hi": 357.97, "count": 48887, "pct": 2.0541}, {"idx": 32, "bp": 402.41, "color": "#4F010E", "lo": 357.97, "hi": 485.77, "count": 44383, "pct": 1.8649}, {"idx": 33, "bp": 569.14, "color": "#3E040B", "lo": 485.77, "hi": 569.14, "count": 18061, "pct": 0.7589}], "outBelow": 77970, "outAbove": 79261, "outPct": 6.6066, "rangeMin": -569.14, "rangeMax": 569.14}, "pow": {"bins": [{"idx": 1, "bp": -5000.0, "color": "#0C0343", "lo": -5000.0, "hi": -4697.26, "count": 481, "pct": 0.0202}, {"idx": 2, "bp": -4394.53, "color": "#070B51", "lo": -4697.26, "hi": -4111.32, "count": 1154, "pct": 0.0485}, {"idx": 3, "bp": -3828.12, "color": "#001361", "lo": -4111.32, "hi": -3564.45, "count": 1582, "pct": 0.0665}, {"idx": 4, "bp": -3300.78, "color": "#001A6E", "lo": -3564.45, "hi": -3056.64, "count": 2163, "pct": 0.0909}, {"idx": 5, "bp": -2812.5, "color": "#00227A", "lo": -3056.64, "hi": -2587.89, "count": 2530, "pct": 0.1063}, {"idx": 6, "bp": -2363.28, "color": "#002B88", "lo": -2587.89, "hi": -2158.2, "count": 3190, "pct": 0.134}, {"idx": 7, "bp": -1953.12, "color": "#003596", "lo": -2158.2, "hi": -1767.57, "count": 4246, "pct": 0.1784}, {"idx": 8, "bp": -1582.03, "color": "#003FA2", "lo": -1767.57, "hi": -1416.01, "count": 6368, "pct": 0.2676}, {"idx": 9, "bp": -1250.0, "color": "#004AAE", "lo": -1416.01, "hi": -1103.51, "count": 9534, "pct": 0.4006}, {"idx": 10, "bp": -957.03, "color": "#0054B8", "lo": -1103.51, "hi": -830.08, "count": 14637, "pct": 0.615}, {"idx": 11, "bp": -703.12, "color": "#0061C6", "lo": -830.08, "hi": -595.7, "count": 23062, "pct": 0.969}, {"idx": 12, "bp": -488.28, "color": "#0074D9", "lo": -595.7, "hi": -400.39, "count": 38320, "pct": 1.6101}, {"idx": 13, "bp": -312.5, "color": "#0089F0", "lo": -400.39, "hi": -244.14, "count": 66444, "pct": 2.7919}, {"idx": 14, "bp": -175.78, "color": "#009EFC", "lo": -244.14, "hi": -126.95, "count": 117499, "pct": 4.9371}, {"idx": 15, "bp": -78.12, "color": "#00B2FF", "lo": -126.95, "hi": -48.83, "count": 206637, "pct": 8.6825}, {"idx": 16, "bp": -19.53, "color": "#4DC3FF", "lo": -48.83, "hi": -9.77, "count": 289011, "pct": 12.1437}, {"idx": 17, "bp": 0, "color": "#EDEDED", "lo": -9.77, "hi": 9.77, "count": 555197, "pct": 23.3283}, {"idx": 18, "bp": 19.53, "color": "#FEA274", "lo": 9.77, "hi": 48.83, "count": 412204, "pct": 17.32}, {"idx": 19, "bp": 78.12, "color": "#F98657", "lo": 48.83, "hi": 126.95, "count": 279273, "pct": 11.7345}, {"idx": 20, "bp": 175.78, "color": "#EF663D", "lo": 126.95, "hi": 244.14, "count": 140867, "pct": 5.919}, {"idx": 21, "bp": 312.5, "color": "#E64328", "lo": 244.14, "hi": 400.39, "count": 75648, "pct": 3.1786}, {"idx": 22, "bp": 488.28, "color": "#DC1915", "lo": 400.39, "hi": 595.7, "count": 49565, "pct": 2.0826}, {"idx": 23, "bp": 703.12, "color": "#D7000B", "lo": 595.7, "hi": 830.08, "count": 24592, "pct": 1.0333}, {"idx": 24, "bp": 957.03, "color": "#D0000E", "lo": 830.08, "hi": 1103.51, "count": 14685, "pct": 0.617}, {"idx": 25, "bp": 1250.0, "color": "#C20011", "lo": 1103.51, "hi": 1416.01, "count": 9582, "pct": 0.4026}, {"idx": 26, "bp": 1582.03, "color": "#B50011", "lo": 1416.01, "hi": 1767.57, "count": 6574, "pct": 0.2762}, {"idx": 27, "bp": 1953.12, "color": "#A70012", "lo": 1767.57, "hi": 2158.2, "count": 4574, "pct": 0.1922}, {"idx": 28, "bp": 2363.28, "color": "#960011", "lo": 2158.2, "hi": 2587.89, "count": 3237, "pct": 0.136}, {"idx": 29, "bp": 2812.5, "color": "#840012", "lo": 2587.89, "hi": 3056.64, "count": 2445, "pct": 0.1027}, {"idx": 30, "bp": 3300.78, "color": "#730011", "lo": 3056.64, "hi": 3564.45, "count": 1768, "pct": 0.0743}, {"idx": 31, "bp": 3828.12, "color": "#610010", "lo": 3564.45, "hi": 4111.32, "count": 1410, "pct": 0.0592}, {"idx": 32, "bp": 4394.53, "color": "#4F010E", "lo": 4111.32, "hi": 4697.26, "count": 1207, "pct": 0.0507}, {"idx": 33, "bp": 5000.0, "color": "#3E040B", "lo": 4697.26, "hi": 5000.0, "count": 534, "pct": 0.0224}], "outBelow": 5204, "outAbove": 4500, "outPct": 0.4077, "rangeMin": -5000.0, "rangeMax": 5000.0}};
+
+const META = {
+  lin: {
+    name: "Liniowa",
+    desc: "Równomierne progi od &minus;90 do +90. <strong>Problem:</strong> wąski zakres obcina 33.8% danych — wszystko powyżej &plusmn;90 traci kolor.",
+  },
+  log: {
+    name: "Logarytmiczna",
+    desc: "Progi rosnące logarytmicznie, &plusmn;100 000. Pokrywa prawie cały zakres. <strong>Problem:</strong> skrajne kolory zbierają &lt;0.1% danych — mapa monochromatyczna.",
+  },
+  log2: {
+    name: "Exponencjalna",
+    desc: "Progi oparte na <code>exp(n)</code>, &plusmn;442 413. <strong>Problem:</strong> biny dalej od zera rosną zbyt agresywnie — efekt &ldquo;Diablo heatmap&rdquo;.",
+  },
+  quant1: {
+    name: "Kwantylowa v1",
+    desc: "Progi wyznaczone percentylami danych (wariant gęstszy w środku). Zakres &plusmn;910. Empiryczne dopasowanie do rozkładu — każdy bin zbiera zbliżoną liczbę pikseli, z&nbsp;lekkim zagęszczeniem w&nbsp;strefie środkowej. Obcina 3.8% danych.",
+  },
+  quant2: {
+    name: "Kwantylowa v2",
+    desc: "Progi wyznaczone percentylami danych (wariant gęściej upakowany blisko zera). Zakres &plusmn;569. <strong>Najbardziej równomierny rozkład</strong> ze wszystkich wariantów (std&nbsp;1.14), ale obcina 6.6% danych.",
+  },
+  pow: {
+    name: "Krzywa potęgowa",
+    desc: "Progi wyznaczone krzywą potęgową: <code>wartość = &plusmn;5000 &times; (krok/16)&sup2;</code>. Gęstość kolorów dopasowana do gęstości danych. Szerszy zakres (&plusmn;5000) = mniej obciętych pikseli (0.4%), kosztem większej koncentracji w&nbsp;centrum.",
+  },
+};
+
+let currentVariant = 'pow';
+
+function setVariant(v) {
+  currentVariant = v;
+  document.querySelectorAll('.picker button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.picker button[onclick*="'${v}'"]`).classList.add('active');
+  renderAll();
+}
+
+function fmtPct(p) {
+  if (p >= 1) return p.toFixed(1) + '%';
+  if (p >= 0.01) return p.toFixed(2) + '%';
+  return p.toFixed(3) + '%';
+}
+
+function fmtNum(n) {
+  return n.toLocaleString('pl-PL', {maximumFractionDigits: 2});
+}
+
+function renderAll() {
+  const d = DATA[currentVariant];
+  const m = META[currentVariant];
+  const bins = d.bins;
+  const maxPct = Math.max(...bins.map(b => b.pct));
+  const outTotal = d.outBelow + d.outAbove;
+  
+  // Gradient
+  document.getElementById('gradientBar').innerHTML = bins.map(b =>
+    `<div class="seg" style="background:${b.color}" title="${b.color} · ${fmtNum(b.bp)}"></div>`
+  ).join('');
+  document.getElementById('gradientTicks').innerHTML =
+    `<span>${fmtNum(bins[0].bp)}</span><span>${fmtNum(bins[8].bp)}</span><span>${fmtNum(bins[15].bp)}</span><span>${fmtNum(bins[16].bp)}</span><span>${fmtNum(bins[17].bp)}</span><span>${fmtNum(bins[24].bp)}</span><span>${fmtNum(bins[32].bp)}</span>`;
+  
+  // Info bar
+  document.getElementById('infobar').innerHTML = `
+    <span class="item"><strong>${m.name}</strong></span>
+    <span class="item">Zakres: ${fmtNum(d.rangeMin)} do ${fmtNum(d.rangeMax)}</span>
+    <span class="item">Poza skalą: <strong>${fmtPct(d.outPct)}</strong> (${outTotal.toLocaleString('pl-PL')} px)</span>
+    <div class="variant-desc">${m.desc}</div>
+  `;
+  
+  // Chart
+  const chart = document.getElementById('chart');
+  const gridlines = document.getElementById('gridlines');
+  chart.innerHTML = '';
+  gridlines.innerHTML = '';
+  
+  bins.forEach(b => {
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.style.height = Math.max((b.pct / maxPct) * 100, 0.6) + '%';
+    col.style.background = b.color;
+    if (b.idx >= 16 && b.idx <= 18) col.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,.12)';
+    col.innerHTML = `<div class="tooltip">#${b.idx} &middot; ${b.color}<br>Próg: ${fmtNum(b.bp)}<br>Bin: ${fmtNum(b.lo)} → ${fmtNum(b.hi)}<br>${fmtPct(b.pct)} &middot; ${b.count.toLocaleString('pl-PL')} px</div>`;
+    chart.appendChild(col);
+  });
+  
+  [0, 2, 5, 10, 15, 20, maxPct].forEach(v => {
+    if (v > maxPct || v < 0) return;
+    const pos = (1 - v / maxPct) * 100;
+    if (pos < 0 || pos > 98) return;
+    const gl = document.createElement('div');
+    gl.className = 'gl';
+    gl.style.top = pos + '%';
+    if (v > 0) gl.innerHTML = `<span class="gl-label">${v === maxPct ? v.toFixed(1) : v.toFixed(0)}%</span>`;
+    gridlines.appendChild(gl);
+  });
+  
+  document.getElementById('chartX').innerHTML =
+    `<span>${fmtNum(bins[0].bp)}</span><span>0</span><span>${fmtNum(bins[32].bp)}</span>`;
+  
+  // Summary
+  const pcts = bins.map(b => b.pct);
+  const extNeg = pcts.slice(0,8).reduce((a,b)=>a+b,0);
+  const midNeg = pcts.slice(8,16).reduce((a,b)=>a+b,0);
+  const center = pcts[16];
+  const midPos = pcts.slice(17,25).reduce((a,b)=>a+b,0);
+  const extPos = pcts.slice(25).reduce((a,b)=>a+b,0);
+  
+  document.getElementById('summary').innerHTML = `
+    <div class="zone"><span class="val" style="color:#001A6E">${extNeg.toFixed(1)}%</span><span class="lbl"><span class="dot" style="background:#001A6E"></span>Ekstremy<br>ujemne</span></div>
+    <div class="zone"><span class="val" style="color:#0074D9">${midNeg.toFixed(1)}%</span><span class="lbl"><span class="dot" style="background:#0089F0"></span>Średnie<br>ujemne</span></div>
+    <div class="zone"><span class="val">${center.toFixed(1)}%</span><span class="lbl"><span class="dot" style="background:#EDEDED;border:1px solid #ccc"></span>Strefa<br>neutralna</span></div>
+    <div class="zone"><span class="val" style="color:#E64328">${midPos.toFixed(1)}%</span><span class="lbl"><span class="dot" style="background:#F98657"></span>Średnie<br>dodatnie</span></div>
+    <div class="zone"><span class="val" style="color:#840012">${extPos.toFixed(1)}%</span><span class="lbl"><span class="dot" style="background:#840012"></span>Ekstremy<br>dodatnie</span></div>
+  `;
+  
+  // Table
+  let thtml = '';
+  bins.forEach(b => {
+    const r = parseInt(b.color.slice(1,3),16), g = parseInt(b.color.slice(3,5),16), bl = parseInt(b.color.slice(5,7),16);
+    const lum = 0.299*r + 0.587*g + 0.114*bl;
+    const tc = lum < 140 ? '#fff' : '#333';
+    const cls = b.idx === 17 ? ' center' : '';
+    const bold = b.pct > 5 ? ' bold' : '';
+    const barW = maxPct > 0 ? Math.max((b.pct/maxPct)*100, 0.4) : 0;
+    thtml += `<tr class="row${cls}">
+      <td class="idx">${b.idx}</td>
+      <td><div class="swatch" style="background:${b.color};color:${tc}">${b.color}</div></td>
+      <td class="bp">${fmtNum(b.bp)}</td>
+      <td class="range">${fmtNum(b.lo)} → ${fmtNum(b.hi)}</td>
+      <td class="cnt">${b.count.toLocaleString('pl-PL')}</td>
+      <td class="pct${bold}">${fmtPct(b.pct)}</td>
+      <td class="bar-cell"><div class="bar" style="width:${barW.toFixed(2)}%;background:${b.color}"></div></td>
+    </tr>`;
+  });
+  thtml += `<tr class="row" style="background:#fafafa">
+    <td class="idx"></td>
+    <td><div class="swatch" style="background:#fff;color:#aaa;border:1px dashed #ccc;font-size:.6rem">poza skalą</div></td>
+    <td class="bp"></td>
+    <td class="range">&lt; ${fmtNum(d.rangeMin)} &amp; &gt; ${fmtNum(d.rangeMax)}</td>
+    <td class="cnt">${outTotal.toLocaleString('pl-PL')}</td>
+    <td class="pct">${fmtPct(d.outPct)}</td>
+    <td class="bar-cell"></td>
+  </tr>`;
+  document.getElementById('tableBody').innerHTML = thtml;
+}
+
+renderAll();
+</script>
+</body>
+</html>
