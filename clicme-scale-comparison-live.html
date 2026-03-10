@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CliC:ME - Porównanie wariantów skali (live)</title>
+<style>
+  :root {
+    --bg:#f8fafc;--surface:#f0f4f8;--card-bg:rgba(255,255,255,0.84);--card-border:rgba(154,166,178,0.28);--line:rgba(154,166,178,0.18);
+    --fg:#1a2332;--dim:#3d5068;--dimmer:#5e7590;--faint:#7a90a4;--ghost:#8fa3b4;
+    --accent:#3d6b50;--accent-light:#5a8e6a;--accent-bg:rgba(61,107,80,0.08);--accent-border:rgba(61,107,80,0.35);--accent-border-strong:rgba(61,107,80,0.75);--accent-fill:rgba(61,107,80,0.13);
+    --amber:#c47200;--amber-bg:rgba(196,114,0,0.07);--amber-border:rgba(196,114,0,0.22);
+    --green:#1a6b45;--green-bg:rgba(26,107,69,0.07);--green-border:rgba(26,107,69,0.22);
+    --blue:#1e56a8;--blue-bg:rgba(30,86,168,0.07);--blue-border:rgba(30,86,168,0.20);
+    --red:#cc2010;--red-bg:rgba(204,32,16,0.07);--red-border:rgba(204,32,16,0.22);
+    --mono:'Courier New',monospace;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+    --grid-line:rgb(188,204,220);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;min-height:100vh;position:relative;}
+
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(to right,var(--grid-line) 1px,transparent 1px),linear-gradient(to bottom,var(--grid-line) 1px,transparent 1px);background-size:20px 20px;-webkit-mask-image:repeating-linear-gradient(to right,black 0px,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0px,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);-webkit-mask-composite:source-in;mask-image:repeating-linear-gradient(to right,black 0px,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0px,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);mask-composite:intersect;opacity:0.4;}
+
+  .xlinks{position:static;height:24px;display:flex;align-items:center;justify-content:center;gap:0;background:rgba(240,244,248,0.88);border-bottom:1px solid rgba(154,166,178,0.15);}
+  .xlinks a{display:flex;align-items:center;padding:0 14px;height:100%;font-size:0.5625rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ghost);text-decoration:none;border-right:1px solid rgba(154,166,178,0.15);transition:color 0.2s;}
+  .xlinks a:last-child{border-right:none;}
+  .xlinks a:hover{color:var(--dimmer);}
+  .xlinks a.active{color:var(--accent);}
+
+  .wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:32px 32px 80px;}
+
+  .tag{font-size:0.625rem;font-weight:500;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1.15;margin-bottom:6px;}
+  h1 .sub{color:var(--ghost);}
+  .subtitle{font-size:14px;color:var(--dim);line-height:1.6;}
+  .date{font-size:0.75rem;color:var(--faint);margin-top:10px;font-family:var(--mono);}
+
+  .nav{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--bg) 78%,transparent);padding:12px 0 26px;display:flex;gap:5px;flex-wrap:wrap;}
+  .nav button{background:rgba(255,255,255,0.72);border:1px solid var(--card-border);border-radius:6px;padding:5px 11px;font-size:10px;font-weight:600;color:var(--dimmer);cursor:pointer;font-family:var(--sans);transition:color 0.2s,background 0.2s;position:relative;overflow:hidden;z-index:0;backdrop-filter:blur(4px);}
+  .nav button::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--prog,0%);background:var(--accent-fill);transition:width 0.1s linear;pointer-events:none;z-index:-1;border-radius:5px 0 0 5px;}
+  .nav button::after{content:'';position:absolute;inset:-1px;border:1.5px solid var(--accent-border);border-radius:7px;clip-path:inset(0 50% 100% 50%);transition:clip-path 0.35s ease;pointer-events:none;z-index:1;}
+  .nav button:hover::after{clip-path:inset(0 0 0 0);}
+  .nav button:hover{color:var(--accent);background:rgba(255,255,255,0.92);}
+  .nav button.on{border:1px solid var(--accent-border-strong);color:var(--accent);background:rgba(255,255,255,0.9);font-weight:700;box-shadow:0 0 0 2px rgba(61,107,80,0.18);}
+  .nav button.on::after{clip-path:inset(0 0 0 0);border-color:rgba(61,107,80,0.5);}
+
+  .sec{margin-bottom:60px;scroll-margin-top:110px;}
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:22px;}
+  .sec-num{font-size:0.75rem;font-weight:700;color:var(--accent);font-family:var(--mono);opacity:0.75;}
+  .sec h2{font-size:21px;font-weight:800;letter-spacing:-0.02em;}
+
+  .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(100,130,160,0.10),0 4px 14px rgba(100,130,160,0.05);backdrop-filter:blur(6px);}
+  .card.accent{border-color:var(--accent-border);}
+  .card.green{border-color:var(--green-border);}
+  .card.amber{border-color:var(--amber-border);}
+
+  .fade-in{opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;}
+  .fade-in.visible{opacity:1;transform:translateY(0);}
+
+  .lbl{font-size:0.75rem;color:var(--faint);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+  .tx{font-size:14px;line-height:1.9;color:var(--dim);margin-bottom:14px;}
+  .tx:last-child{margin-bottom:0;}
+  b,strong{color:var(--fg);font-weight:700;}
+
+  .co{border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.75;color:var(--dim);}
+  .co.blue{background:var(--blue-bg);border:1px solid var(--blue-border);}
+  .co.amber{background:var(--amber-bg);border:1px solid var(--amber-border);}
+  .co.green{background:var(--green-bg);border:1px solid var(--green-border);}
+  .co.red{background:var(--red-bg);border:1px solid var(--red-border);}
+  .co-icon{font-weight:800;margin-right:6px;}
+  .co.blue .co-icon{color:var(--blue);}
+  .co.amber .co-icon{color:var(--amber);}
+  .co.green .co-icon{color:var(--green);}
+  .co.red .co-icon{color:var(--red);}
+
+  .seg-wrap{display:inline-flex;background:var(--surface);border:1px solid var(--card-border);border-radius:10px;padding:3px;gap:1px;flex-wrap:wrap;margin-bottom:0;}
+  .seg-wrap.seg-sm{border-radius:7px;}
+  .seg-btn{font-size:0.6875rem;font-weight:500;font-family:var(--sans);padding:5px 15px;border:none;background:transparent;color:var(--ghost);border-radius:7px;cursor:pointer;transition:color 0.12s;white-space:nowrap;}
+  .seg-wrap.seg-sm .seg-btn{padding:4px 11px;font-size:0.625rem;border-radius:5px;}
+  .seg-btn:hover{color:var(--dim);}
+  .seg-btn.active{background:#fff;color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+
+  .mc-focus-wrap{position:relative;width:100vw;margin-left:calc(-50vw + 50%);padding-top:48vw;background:var(--surface);overflow:hidden;border-top:1px solid var(--card-border);border-bottom:1px solid var(--card-border);cursor:pointer;}
+  .mc-focus-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;transition:opacity 0.22s ease;}
+  .mc-focus-wrap .mc-badge{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.55);color:#fff;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:0.06em;padding:3px 8px;border-radius:4px;backdrop-filter:blur(4px);pointer-events:none;}
+  .mc-spinner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:28px;height:28px;border:3px solid var(--card-border);border-top-color:var(--accent);border-radius:50%;animation:mc-spin 0.7s linear infinite;z-index:2;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+  .mc-spinner.visible{opacity:1;}
+  @keyframes mc-spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+  .mc-thumbs{display:flex;gap:8px;margin-top:8px;}
+  .mc-thumb{flex:1;position:relative;padding-top:20%;border-radius:6px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:border-color 0.15s,opacity 0.15s;background:var(--surface);}
+  .mc-thumb img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block;transition:opacity 0.22s ease;}
+  .mc-thumb .mc-spinner-sm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:16px;border:2px solid var(--card-border);border-top-color:var(--accent);border-radius:50%;animation:mc-spin 0.7s linear infinite;z-index:2;opacity:0;transition:opacity 0.15s;pointer-events:none;}
+  .mc-thumb .mc-spinner-sm.visible{opacity:1;}
+  .mc-thumb .mc-thumb-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.42);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:0.05em;padding:4px 6px;text-align:center;pointer-events:none;}
+  .mc-thumb.active{border-color:var(--accent-border-strong);opacity:1;}
+  .mc-thumb:not(.active){opacity:0.65;}
+  .mc-thumb:hover:not(.active){opacity:0.88;border-color:var(--card-border);}
+  .mc-img-fade-out{opacity:0!important;}
+
+  .note-10{font-size:0.6875rem;color:var(--faint);line-height:1.5;margin-top:6px;}
+
+  #sc13-tip{display:none;position:absolute;background:rgba(255,255,255,0.97);border:1px solid var(--card-border);border-radius:7px;padding:10px 12px;box-shadow:0 2px 14px rgba(0,0,0,0.13);font-size:11px;z-index:20;pointer-events:none;font-family:var(--sans);line-height:1.5;max-width:280px;}
+
+  .footer{text-align:center;padding:28px 0 36px;border-top:1px solid var(--line);font-size:10px;color:var(--ghost);line-height:2.0;font-family:var(--mono);}
+  .footer .f-title{color:var(--dimmer);}
+  .footer .f-sep{color:var(--faint);padding:0 5px;}
+  .footer .f-link{color:var(--dim);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- xlinks tymczasowo wyłączone -->
+<!--
+<nav class="xlinks">
+  <a href="clicme-pixel-color-system.html">① System kolorystyczny</a>
+  <a href="clicme-pixel-color-scale-reference.html">② Porównanie skal</a>
+  <a href="scale-comparison-live.html" class="active">③ Porównanie live</a>
+</nav>
+-->
+
+<div class="wrap">
+  <header style="margin-bottom:48px;padding-top:20px;">
+    <div class="tag">CliC:ME · Net Migration · Scale Comparison</div>
+    <h1>Porównanie wariantów skali<br><span class="sub">na żywym dashboardzie</span></h1>
+    <div class="subtitle">Jedna paleta musi obsłużyć zarówno łagodny scenariusz (RCP 4.5/2030, pełna populacja) jak i ekstremalny (RCP 8.5/2090, jedna grupa demograficzna). Żadne ze znanych podejść - kwantyle, liniowa, logarytmiczna - nie wygrywa wszystkich przypadków jednocześnie. Ta strona porównuje trzy warianty na żywych danych z dashboardu, żeby ustalić, który z nich radzi sobie najlepiej w&nbsp;praktyce.</div>
+    <div class="date">// 33 dyskretne stepy · dywergentna niebiesko–szaro–czerwona · krzywa potęgowa vs kwantyle vs kompromis</div>
+  </header>
+
+  <nav class="nav" id="nav">
+    <button data-sec="s1" class="on">Porównanie map</button>
+    <button data-sec="s2">Scorecard</button>
+  </nav>
+
+  <!-- ══ 01 PORÓWNANIE MAP ══ -->
+  <section class="sec fade-in" id="s1">
+    <div class="sec-head"><span class="sec-num">01 //</span><h2>Porównanie wariantów mapy</h2></div>
+
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:20px;line-height:1;">
+      <div style="display:flex;align-items:center;gap:10px;line-height:1;">
+        <div class="lbl" style="font-size:0.625rem;margin:0;line-height:1;">Kontekst</div>
+        <div class="seg-wrap seg-sm" id="mc-seg-ctx" style="margin:0;">
+          <button class="seg-btn active" data-ctx="452030">RCP 4.5 · 2030</button>
+          <button class="seg-btn" data-ctx="702050">RCP 7.0 · 2050</button>
+          <button class="seg-btn" data-ctx="852090">RCP 8.5 · 2090</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;line-height:1;">
+        <div class="lbl" style="font-size:0.625rem;margin:0;line-height:1;">X-factor</div>
+        <div class="seg-wrap seg-sm" id="mc-seg-xf" style="margin:0;">
+          <button class="seg-btn active" data-xf="x1">X=1</button>
+          <button class="seg-btn" data-xf="x8">X=8</button>
+          <button class="seg-btn" data-xf="x24">X=24</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in" style="padding:16px;margin-bottom:0;border-radius:12px 12px 0 0;">
+      <div class="mc-thumbs" id="mc-thumbs" style="margin-bottom:0;">
+        <div class="mc-thumb active" data-variant="quant1hc"><div class="mc-spinner-sm"></div><img src="" alt=""><div class="mc-thumb-label">quant1-hc</div></div>
+        <div class="mc-thumb" data-variant="pow15balanced"><div class="mc-spinner-sm"></div><img src="" alt=""><div class="mc-thumb-label">pow1.5-balanced</div></div>
+        <div class="mc-thumb" data-variant="pow2surgical"><div class="mc-spinner-sm"></div><img src="" alt=""><div class="mc-thumb-label">pow2-surgical</div></div>
+      </div>
+    </div>
+
+    <div class="mc-focus-wrap" id="mc-focus">
+      <div class="mc-spinner" id="mc-spinner"></div>
+      <img id="mc-focus-img" src="" alt="map focus">
+    </div>
+
+    <div class="card fade-in" style="padding:16px;margin-top:0;border-radius:0 0 12px 12px;">
+      <div id="mc-caption" style="margin-bottom:14px;">
+        <div id="mc-caption-title" style="font-size:0.75rem;font-weight:600;color:var(--dim);margin-bottom:2px;"></div>
+        <div id="mc-caption-desc" style="font-size:0.6875rem;color:var(--dimmer);line-height:1.6;margin-bottom:8px;"></div>
+        <div id="mc-caption-facts" style="font-size:0.6875rem;font-family:var(--mono);color:var(--ghost);border-top:1px solid var(--line);padding-top:7px;margin-top:2px;"></div>
+      </div>
+      <div id="mc-verdict" style="margin-bottom:0;"></div>
+    </div>
+
+    <div class="co blue"><span class="co-icon">ℹ</span>Legenda kolorystyczna w lewym dolnym rogu niektórych zrzutów może wykazywać artefakty renderingu - to kwestia eksportu, nie wpływa na dane mapy.</div>
+
+    <!-- Wyjaśnienie wariantów -->
+    <div class="card accent fade-in" style="margin-top:8px;">
+      <div class="lbl">Kontekst i testowane warianty</div>
+      <p class="tx">Mapa migracji klimatycznej musi być czytelna w ekstremalnie różnych kontekstach: od łagodnego scenariusza (RCP 4.5/2030, pełna populacja - wartości rzędu ±20) po ekstremalny (RCP 8.5/2090, jedna grupa demograficzna - wartości rzędu ±5000). Żadna pojedyncza skala nie wygrywa obu przypadków jednocześnie. Przetestowaliśmy trzy podejścia na żywym dashboardzie, każde w 9 kombinacjach scenariusz × demografia:</p>
+
+      <div style="margin:18px 0 14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:4px;">quant1-hc-softclip <span style="font-size:10px;font-weight:600;color:var(--amber);margin-left:6px;">▸ wariant kwantylowy</span></div>
+        <p class="tx">Kluczowa cecha: <strong>równomierny rozkład pikseli na kolory</strong> - każdy z 33 binów pokrywa ~3% danych. Na histogramie wygląda optymalnie. Ciemne krańce zastąpione jaśniejszymi pastelami, zakres skompresowany do ±910.</p>
+        <p class="tx" style="margin-bottom:0;">Problem ujawnia się na mapie: <strong>brak bufora na ekstrema</strong>. Przy ciężkich scenariuszach większość pikseli wychodzi poza wąski zakres i ląduje w najciemniejszych binach - powstają jednolite ciemne plamy bez niuansów (efekt "Diablo"). Przy łagodnych scenariuszach dzieje się odwrotnie - kontrast jest sztucznie pompowany ponad to, co dane uzasadniają, bo progi leżą zbyt blisko zera.</p>
+      </div>
+      <div style="margin-bottom:14px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:4px;">pow1.5-balanced <span style="font-size:10px;font-weight:600;color:var(--blue);margin-left:6px;">▸ kompromis</span></div>
+        <p class="tx">Kluczowa cecha: <strong>łagodniejsza krzywa rozrzedza strefę środkową</strong> - progi nie są tak agresywnie ściśnięte wokół zera jak w pow2, przez co strefa średnia (wartości ±100 do ±1000) dostaje więcej kolorów. Ciężkie scenariusze (RCP 8.5/2090) wyglądają na tym wariancie dobrze - mniej dramatycznie niż pow2, z lepszą czytelnością gradacji w strefach o wysokiej migracji.</p>
+        <p class="tx" style="margin-bottom:0;">Trade-off pojawia się przy łagodnych scenariuszach i w codziennym użyciu (RCP 7.0/2050), gdzie kontrast jest słabszy niż w pow2. <strong>Solidna alternatywa, jeśli priorytetem jest łagodniejszy odbiór ciężkich scenariuszy</strong> kosztem nieco mniejszej czytelności na lekkich danych.</p>
+      </div>
+      <div style="padding-top:14px;border-top:1px solid var(--line);">
+        <div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:4px;">pow2-surgical <span style="font-size:10px;font-weight:600;color:var(--green);margin-left:6px;">▸ rekomendacja</span></div>
+        <p class="tx">Kluczowa cecha: <strong>ciemne krańce palety pełnią rolę bufora</strong> - celowo pochłaniają &lt;1% pikseli z wartościami skrajnymi, dzięki czemu pozostałe 98% danych dostaje pełne spektrum czytelnych kolorów bez ryzyka przesycenia. Środek skali jest gęsto upakowany wokół zera, więc nawet niewielkie różnice między regionami są widoczne.</p>
+        <p class="tx" style="margin-bottom:0;">Wariant ewoluował z pierwotnej palety - krańce delikatnie rozjaśnione (L* 14-19 zamiast oryginalnych 5-10), co adresuje zgłoszony problem nierozróżnialności skrajnych kolorów na legendzie. Korekta <strong>nie zmienia zachowania mapy</strong>, bo dotyczy marginalnej frakcji pikseli. Konsystentnie czytelna we wszystkich 27 testowanych kombinacjach - jedyny wariant, który przechodzi każdy scenariusz bez zastrzeżeń.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ 02 SCORECARD ══ -->
+  <section class="sec fade-in" id="s2">
+    <div class="sec-head"><span class="sec-num">02 //</span><h2>Scorecard - porównanie wariantów</h2></div>
+    <p class="tx" style="margin-bottom:24px">Macierz ocen dla wszystkich kombinacji scenariusz × X-factor × wariant.</p>
+
+    <div class="card fade-in" style="padding:0;position:relative;">
+      <div style="padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:12px 12px 0 0;">
+        <div class="lbl" style="font-size:0.625rem;margin:0;">3 warianty · 3 scenariusze · 3 X-factory = 27 kombinacji</div>
+        <div style="font-size:0.625rem;color:var(--ghost);white-space:nowrap;">najedź na ikonę by zobaczyć ocenę</div>
+      </div>
+      <div id="sc13-wrap" style="position:relative;">
+        <div id="sc13-tip"></div>
+        <div id="sc13-grid" style="display:grid;grid-template-columns:minmax(120px,auto) minmax(120px,auto) repeat(3,1fr);font-size:12px;font-family:var(--sans);"></div>
+      </div>
+    </div>
+  </section>
+
+  <div style="text-align:center;margin-top:32px;margin-bottom:8px;">
+    <a href="https://github.com/Papugovsky/LISER/archive/refs/heads/main.zip" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;font-size:0.75rem;font-weight:600;color:var(--dim);text-decoration:none;transition:border-color 0.15s,color 0.15s;box-shadow:0 1px 3px rgba(100,130,160,0.10);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Pobierz wszystkie rendery (ZIP)
+    </a>
+  </div>
+
+  <footer class="footer">
+    <span class="f-title">CliC:ME Dashboard</span><span class="f-sep">·</span>Scale Comparison Live<span class="f-sep">·</span>Net Migration<br>
+    3 warianty × 9 scenariuszy<span class="f-sep">·</span>X-factor per socjodemografia<br>
+    Made by <a href="https://autentika.com" class="f-link" target="_blank">Autentika</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const BASE='https://papugovsky.github.io/LISER/map-renders/';
+  const VARIANTS=['quant1hc','pow15balanced','pow2surgical'];
+  const VL={'pow2surgical':'Power Curve 2.0 - Surgical','quant1hc':'Quantile v1 - HC Softclip','pow15balanced':'Power Curve 1.5 - Balanced'};
+  const CL={'452030':'RCP 4.5 · 2030','702050':'RCP 7.0 · 2050','852090':'RCP 8.5 · 2090'};
+  const XL={'x1':'X=1','x8':'X=8','x24':'X=24'};
+  const XD={'x1':'Gender: All · Age: All · Education: All','x8':'Gender: Female · Age: All · Education: Primary','x24':'Gender: Female · Age: 20–39 · Education: Primary'};
+  const RL={'pow2surgical':{'x1':'±5000','x8':'±625','x24':'±208'},'quant1hc':{'x1':'±910','x8':'±114','x24':'±38'},'pow15balanced':{'x1':'±5000','x8':'±625','x24':'±208'}};
+  const VD={'pow2surgical':'Krzywa potęgowa ²·⁰, zakres ±5000. Oryginalna paleta z delikatnie rozjaśnionymi krańcami. Ciemne kolory pełnią rolę bufora na ekstrema.','quant1hc':'Skala kwantylowa, zakres ±910. Paleta high-chroma softclip (obcięte ciemne krańce, pastele blisko szarego). Wąski zakres ÷ X daje bardzo ciasne progi.','pow15balanced':'Krzywa potęgowa ¹·⁵, zakres ±5000. Łagodniejszy wykładnik rozkłada kolory szerzej w strefie średniej.'};
+  const V={
+    'pow2surgical-452030-x1':{i:'✓',c:'good',t:'<strong>Czytelne.</strong> Łagodny scenariusz - umiarkowany kontrast, wierny wobec danych.'},
+    'pow2surgical-702050-x1':{i:'✓',c:'good',t:'<strong>Pełne spektrum.</strong> Niuanse między regionami, zbalansowane nasycenie.'},
+    'pow2surgical-852090-x1':{i:'✓',c:'good',t:'<strong>Pełne spektrum, bez przesycenia.</strong> Ciemne krańce absorbują ekstrema.'},
+    'pow2surgical-452030-x8':{i:'✓',c:'good',t:'<strong>X-factor działa.</strong> Wzorce subgrup wyraźnie widoczne.'},
+    'pow2surgical-702050-x8':{i:'✓',c:'good',t:'<strong>Bogaty detal.</strong> Migracja subgrup czytelnie zróżnicowana.'},
+    'pow2surgical-852090-x8':{i:'✓',c:'good',t:'<strong>Intensywne ale kontrolowane.</strong> Pełny zakres kolorów bez przytłaczającego mroku.'},
+    'pow2surgical-452030-x24':{i:'✓',c:'good',t:'<strong>Jedna grupa, łagodny scenariusz - wciąż czytelne.</strong> ±208 wydobywa drobnoziarniste wzorce.'},
+    'pow2surgical-702050-x24':{i:'✓',c:'good',t:'<strong>Doskonały kontrast.</strong> Jasne rozróżnienie emigracja/imigracja.'},
+    'pow2surgical-852090-x24':{i:'✓',c:'good',t:'<strong>Pełne spektrum przy max intensywności.</strong> Krzywa potęgowa trzyma ekstrema w ryzach.'},
+    'quant1hc-452030-x1':{i:'⚠',c:'warn',t:'<strong>Sztucznie pompowany kontrast.</strong> Łagodny scenariusz wygląda na dramatyczniejszy niż powinien.'},
+    'quant1hc-702050-x1':{i:'⚠',c:'warn',t:'<strong>Robi się ciemno.</strong> Ciężkie nasycenie w ekstremach już przy średnim scenariuszu.'},
+    'quant1hc-852090-x1':{i:'✗',c:'bad',t:'<strong>Efekt "Diablo".</strong> Większość pikseli wpada w najciemniejsze biny. Detal utracony.'},
+    'quant1hc-452030-x8':{i:'⚠',c:'warn',t:'<strong>Dominacja czerwieni.</strong> Za dużo danych skompresowanych w ekstremalnych kolorach.'},
+    'quant1hc-702050-x8':{i:'⚠',c:'warn',t:'<strong>Ciężkie nasycenie.</strong> Trudno odróżnić niuanse regionalne.'},
+    'quant1hc-852090-x8':{i:'✗',c:'bad',t:'<strong>Mroczne przesycenie.</strong> Prawie wszystko w najciemniejszych binach.'},
+    'quant1hc-452030-x24':{i:'⚠',c:'warn',t:'<strong>Ciężkie czerwone tony.</strong> Nawet małe wartości trafiają w ekstremalnych kolorach.'},
+    'quant1hc-702050-x24':{i:'✗',c:'bad',t:'<strong>Ciemno, trudno czytać.</strong> Skala przytłoczona przez dane.'},
+    'quant1hc-852090-x24':{i:'✗',c:'bad',t:'<strong>Nieczytelne.</strong> Stałe ciemne plamy, zero niuansów.'},
+    'pow15balanced-452030-x1':{i:'⚠',c:'warn',t:'<strong>Bledsze niż pow2.</strong> Łagodniejsza krzywa = mniej kontrastu na lekkich danych.'},
+    'pow15balanced-702050-x1':{i:'~',c:'warn',t:'<strong>Przyzwoite ale stonowane.</strong> Detale obecne ale przytłumione.'},
+    'pow15balanced-852090-x1':{i:'✓',c:'good',t:'<strong>Mniej dramatyczne niż pow2.</strong> Niektórzy mogą preferować łagodniejszy rozkład.'},
+    'pow15balanced-452030-x8':{i:'⚠',c:'warn',t:'<strong>Blade.</strong> Wzorce subgrup zanikają w pastelach.'},
+    'pow15balanced-702050-x8':{i:'~',c:'warn',t:'<strong>Widoczne ale słabsze</strong> niż pow2 przy tych samych ustawieniach.'},
+    'pow15balanced-852090-x8':{i:'✓',c:'good',t:'<strong>Dobry kontrast.</strong> Silny scenariusz kompensuje łagodniejszą krzywą.'},
+    'pow15balanced-452030-x24':{i:'⚠',c:'warn',t:'<strong>Blade.</strong> Wzorce ledwo widoczne na łagodnym scenariuszu.'},
+    'pow15balanced-702050-x24':{i:'~',c:'warn',t:'<strong>Akceptowalne ale słabsze</strong> niż pow2. Wymaga wysiłku w czytaniu.'},
+    'pow15balanced-852090-x24':{i:'✓',c:'good',t:'<strong>OK.</strong> Max scenariusz kompensuje - pełne spektrum widoczne.'},
+  };
+  const VC={good:{cls:'green',icon:'✓',ic:'var(--green)'},warn:{cls:'amber',icon:'⚠',ic:'var(--amber)'},bad:{cls:'red',icon:'✗',ic:'var(--red)'}};
+  const CS={good:{bg:'var(--green-bg)',border:'var(--green-border)',color:'var(--green)'},warn:{bg:'var(--amber-bg)',border:'var(--amber-border)',color:'var(--amber)'},bad:{bg:'var(--red-bg)',border:'var(--red-border)',color:'var(--red)'}};
+
+  let st={xf:'x1',ctx:'452030',variant:'pow2surgical'};
+
+  function imgUrl(v,c,x){return BASE+v+'-'+c+'-'+x+'.png';}
+
+  function updateImages(){
+    const fi=document.getElementById('mc-focus-img');
+    const sp=document.getElementById('mc-spinner');
+    sp.classList.add('visible');
+    fi.classList.add('mc-img-fade-out');
+    setTimeout(()=>{
+      fi.src=imgUrl(st.variant,st.ctx,st.xf);
+      fi.onload=()=>{sp.classList.remove('visible');fi.classList.remove('mc-img-fade-out');fi.onload=null;};
+    },120);
+    VARIANTS.forEach(v=>{
+      const th=document.querySelector('.mc-thumb[data-variant="'+v+'"]');
+      const tImg=th.querySelector('img');
+      const tSp=th.querySelector('.mc-spinner-sm');
+      tSp.classList.add('visible');
+      tImg.classList.add('mc-img-fade-out');
+      tImg.src=imgUrl(v,st.ctx,st.xf);
+      tImg.onload=()=>{tSp.classList.remove('visible');tImg.classList.remove('mc-img-fade-out');tImg.onload=null;};
+      th.classList.toggle('active',v===st.variant);
+    });
+    // Caption
+    document.getElementById('mc-caption-title').textContent=VL[st.variant];
+    document.getElementById('mc-caption-desc').textContent=VD[st.variant];
+    const sep='<span style="color:var(--faint);margin:0 7px">·</span>';
+    document.getElementById('mc-caption-facts').innerHTML=CL[st.ctx]+sep+'X='+st.xf.replace('x','')+' ('+RL[st.variant][st.xf]+')'+sep+XD[st.xf];
+    // Verdict
+    const k=st.variant+'-'+st.ctx+'-'+st.xf,v=V[k],el=document.getElementById('mc-verdict');
+    if(v){const c=VC[v.c];el.innerHTML='<div class="co '+c.cls+'" style="margin:0;"><span class="co-icon">'+c.icon+'</span>'+v.t+'</div>';}
+    else el.innerHTML='';
+  }
+
+  document.getElementById('mc-seg-ctx').addEventListener('click',e=>{const b=e.target.closest('.seg-btn');if(!b)return;document.querySelectorAll('#mc-seg-ctx .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');st.ctx=b.dataset.ctx;updateImages();});
+  document.getElementById('mc-seg-xf').addEventListener('click',e=>{const b=e.target.closest('.seg-btn');if(!b)return;document.querySelectorAll('#mc-seg-xf .seg-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');st.xf=b.dataset.xf;updateImages();});
+  document.getElementById('mc-thumbs').addEventListener('click',e=>{const t=e.target.closest('.mc-thumb');if(!t)return;st.variant=t.dataset.variant;updateImages();});
+  document.getElementById('mc-focus').addEventListener('click',()=>{const i=VARIANTS.indexOf(st.variant);st.variant=VARIANTS[(i+1)%VARIANTS.length];updateImages();});
+  updateImages();
+
+  // ── SCORECARD ──
+  const SV=['quant1hc','pow15balanced','pow2surgical'],SS=['452030','702050','852090'],SX=['x1','x8','x24'];
+  function buildSC(){
+    const w=document.getElementById('sc13-grid'),tip=document.getElementById('sc13-tip'),tw=document.getElementById('sc13-wrap');
+    let h='';['Scenariusz','X-factor',...SV.map(v=>VL[v])].forEach((l,i)=>{
+      h+='<div style="'+(i>=2?'text-align:center;':'')+'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--faint);padding:8px 10px;border-bottom:2px solid rgba(0,0,0,0.08);">'+l+'</div>';
+    });
+    SS.forEach((s,si)=>{SX.forEach((x,xi)=>{
+      const sep=xi===0&&si>0?'border-top:2px solid rgba(0,0,0,0.07);':'';
+      const bdr='border-bottom:1px solid rgba(0,0,0,0.04);';
+      const base=sep+bdr;
+      if(xi===0)h+='<div style="'+base+'padding:8px 10px;font-weight:500;font-size:11px;color:var(--dim);display:flex;align-items:center;grid-row:span 3;">'+CL[s]+'</div>';
+      h+='<div style="'+base+'padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--dimmer);white-space:nowrap;">'+XL[x]+'</div>';
+      SV.forEach(v=>{const k=v+'-'+s+'-'+x,d=V[k];if(!d){h+='<div style="'+base+'padding:8px 10px;text-align:center;">-</div>';return;}
+        const c=CS[d.c];h+='<div style="'+base+'padding:8px 10px;display:flex;align-items:center;justify-content:center;"><span class="sc13-icon" data-key="'+k+'" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:'+c.bg+';border:1px solid '+c.border+';font-size:13px;color:'+c.color+';cursor:default;">'+d.i+'</span></div>';
+      });
+    });});
+    w.innerHTML=h;
+    w.querySelectorAll('.sc13-icon').forEach(icon=>{
+      icon.addEventListener('mouseenter',e=>{const d=V[icon.dataset.key];if(!d)return;const c=CS[d.c];
+        tip.innerHTML='<div style="font-size:10px;font-weight:700;color:var(--dimmer);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Ocena</div><div style="display:flex;gap:8px;align-items:flex-start;"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;background:'+c.bg+';border:1px solid '+c.border+';font-size:12px;color:'+c.color+';flex-shrink:0;margin-top:1px;">'+d.i+'</span><div style="font-size:11px;color:var(--dim);line-height:1.6;">'+d.t+'</div></div>';
+        tip.style.display='block';});
+      icon.addEventListener('mousemove',e=>{const r=tw.getBoundingClientRect();let l=e.clientX-r.left+14,t=e.clientY-r.top-36;if(l+tip.offsetWidth>r.width-8)l=e.clientX-r.left-tip.offsetWidth-14;tip.style.left=l+'px';tip.style.top=t+'px';});
+      icon.addEventListener('mouseleave',()=>{tip.style.display='none';});
+    });
+  }
+  buildSC();
+})();
+
+// ── NAV + FADE-IN ──
+(function(){
+  const sIds=['s1','s2'];
+  const navBtns=document.querySelectorAll('.nav button');
+  const navEl=document.getElementById('nav');
+  const navMap={};
+  function getOff(){return navEl?navEl.getBoundingClientRect().height+16:80;}
+  function scrollTo(id){const el=document.getElementById(id);if(!el)return;const t=el.getBoundingClientRect().top+window.scrollY-getOff();window.scrollTo({top:Math.max(0,t),behavior:'smooth'});}
+  navBtns.forEach(b=>{navMap[b.dataset.sec]=b;b.addEventListener('click',()=>scrollTo(b.dataset.sec));});
+  function updateNav(){
+    const off=getOff(),sp=window.scrollY+off,ab=window.innerHeight+window.scrollY>=document.body.offsetHeight-50;
+    let cur=sIds[0],prog=0;
+    if(ab){for(let i=sIds.length-1;i>=0;i--)if(document.getElementById(sIds[i])){cur=sIds[i];break;}prog=100;}
+    else{for(let i=sIds.length-1;i>=0;i--){const el=document.getElementById(sIds[i]);if(el&&el.offsetTop<=sp){cur=sIds[i];const nx=i<sIds.length-1?document.getElementById(sIds[i+1]):null;if(nx){const h=nx.offsetTop-el.offsetTop;if(h>0)prog=Math.min(100,Math.max(0,(sp-el.offsetTop)/h*100));}else{const h=document.body.offsetHeight-el.offsetTop;if(h>0)prog=Math.min(100,Math.max(0,(sp-el.offsetTop)/h*100));}break;}}}
+    navBtns.forEach(b=>{b.classList.remove('on');b.style.setProperty('--prog','0%');});
+    if(navMap[cur]){navMap[cur].classList.add('on');navMap[cur].style.setProperty('--prog',prog.toFixed(1)+'%');}
+  }
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.04});
+  document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT')return;
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();const a=document.querySelector('.nav button.on');let i=a?sIds.indexOf(a.dataset.sec):0;if(e.key==='ArrowLeft')i=Math.max(0,i-1);else i=Math.min(sIds.length-1,i+1);scrollTo(sIds[i]);}
+  });
+  window.addEventListener('scroll',updateNav,{passive:true});
+  window.addEventListener('resize',updateNav,{passive:true});
+  updateNav();
+})();
+</script>
+</body>
+</html>
