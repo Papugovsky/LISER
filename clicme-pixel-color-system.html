@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CliC:ME - System kolorystyczny</title>
+<style>
+  :root {
+    --bg:#f8fafc;--surface:#f0f4f8;--card-bg:rgba(255,255,255,0.84);--card-border:rgba(154,166,178,0.28);--line:rgba(154,166,178,0.18);
+    --fg:#1a2332;--dim:#3d5068;--dimmer:#5e7590;--faint:#7a90a4;--ghost:#8fa3b4;
+    --accent:#3d6b50;--accent-light:#5a8e6a;--accent-bg:rgba(61,107,80,0.08);--accent-border:rgba(61,107,80,0.35);--accent-border-strong:rgba(61,107,80,0.70);--accent-fill:rgba(61,107,80,0.13);
+    --amber:#c47200;--amber-bg:rgba(196,114,0,0.07);--amber-border:rgba(196,114,0,0.22);
+    --green:#1a6b45;--green-bg:rgba(26,107,69,0.07);--green-border:rgba(26,107,69,0.22);
+    --blue:#1e56a8;--blue-bg:rgba(30,86,168,0.07);--blue-border:rgba(30,86,168,0.20);
+    --red:#cc2010;--red-bg:rgba(204,32,16,0.07);--red-border:rgba(204,32,16,0.22);
+    --mono:'Courier New',monospace;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+    --grid-line:rgb(188,204,220);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;min-height:100vh;position:relative;}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(to right,var(--grid-line) 1px,transparent 1px),linear-gradient(to bottom,var(--grid-line) 1px,transparent 1px);
+    background-size:20px 20px;
+    -webkit-mask-image:repeating-linear-gradient(to right,black 0,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);
+    -webkit-mask-composite:source-in;
+    mask-image:repeating-linear-gradient(to right,black 0,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);
+    mask-composite:intersect;opacity:0.4;}
+  .xlinks{position:static;height:24px;display:flex;align-items:center;justify-content:center;gap:0;background:rgba(240,244,248,0.88);border-bottom:1px solid rgba(154,166,178,0.15);}
+  .xlinks a{display:flex;align-items:center;padding:0 14px;height:100%;font-size:0.5625rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ghost);text-decoration:none;border-right:1px solid rgba(154,166,178,0.15);transition:color 0.2s;}
+  .xlinks a:last-child{border-right:none;}
+  .xlinks a:hover{color:var(--dimmer);}
+  .xlinks a.active{color:var(--accent);}
+  .wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:32px 32px 80px;}
+  .tag{font-size:0.625rem;font-weight:500;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1.15;margin-bottom:6px;}
+  h1 .sub{color:var(--ghost);}
+  .subtitle{font-size:14px;color:var(--dim);line-height:1.6;}
+  .date{font-size:0.75rem;color:var(--faint);margin-top:10px;font-family:var(--mono);}
+  .nav{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--bg) 78%,transparent);padding:12px 0 26px;display:flex;gap:5px;flex-wrap:wrap;}
+  .nav button{background:rgba(255,255,255,0.72);border:1px solid var(--card-border);border-radius:6px;padding:5px 11px;font-size:10px;font-weight:600;color:var(--dimmer);cursor:pointer;font-family:var(--sans);transition:color 0.2s,background 0.2s;position:relative;overflow:hidden;z-index:0;backdrop-filter:blur(4px);}
+  .nav button::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--prog,0%);background:var(--accent-fill);transition:width 0.1s linear;pointer-events:none;z-index:-1;border-radius:5px 0 0 5px;}
+  .nav button::after{content:'';position:absolute;inset:-1px;border:1.5px solid var(--accent-border);border-radius:7px;clip-path:inset(0 50% 100% 50%);transition:clip-path 0.35s ease;pointer-events:none;z-index:1;}
+  .nav button:hover::after{clip-path:inset(0 0 0 0);}
+  .nav button:hover{color:var(--accent);background:rgba(255,255,255,0.92);}
+  .nav button.on{border:1px solid var(--accent-border-strong);color:var(--accent);background:rgba(255,255,255,0.9);font-weight:700;box-shadow:0 0 0 2px rgba(61,107,80,0.18);}
+  .nav button.on::after{clip-path:inset(0 0 0 0);border-color:rgba(61,107,80,0.5);}
+  .sec{margin-bottom:60px;scroll-margin-top:110px;}
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:22px;}
+  .sec-num{font-size:0.75rem;font-weight:700;color:var(--accent);font-family:var(--mono);opacity:0.70;}
+  .sec h2{font-size:21px;font-weight:800;letter-spacing:-0.02em;}
+  .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(100,130,160,0.10),0 4px 14px rgba(100,130,160,0.05);backdrop-filter:blur(6px);}
+  .card.accent{border-color:var(--accent-border);}
+  .card.green{border-color:var(--green-border);}
+  .card.amber{border-color:var(--amber-border);}
+  .fade-in{opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;}
+  .fade-in.visible{opacity:1;transform:translateY(0);}
+  .lbl{font-size:0.75rem;color:var(--faint);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+  .tx{font-size:14px;line-height:1.9;color:var(--dim);margin-bottom:14px;}
+  .tx:last-child{margin-bottom:0;}
+  b,strong{color:var(--fg);font-weight:700;}
+  .toast{position:fixed;z-index:200;background:rgba(26,35,50,0.92);color:rgba(255,255,255,0.82);font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;opacity:0;transition:opacity 0.25s ease;pointer-events:none;font-family:var(--mono);white-space:nowrap;border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+  .toast.show{opacity:1;}
+  .tbl-toggle{font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;transition:color 0.2s ease;user-select:none;}
+  .tbl-toggle:hover{color:var(--accent-light);}
+  .tbl-cell{cursor:pointer;transition:background 0.15s;border-radius:3px;}
+  .tbl-cell:hover{background:var(--accent-bg);}
+  .tbl-cell span.csw-lg{transition:transform 0.15s,box-shadow 0.15s;border:1px solid var(--card-border);}
+  .tbl-cell:hover span.csw-lg{transform:scale(1.15);box-shadow:0 0 6px rgba(61,107,80,0.2);border-color:var(--accent-border);}
+  .de-fix{text-transform:none;}
+  code{font-family:var(--mono);font-size:0.75rem;color:var(--accent);font-weight:600;}
+  code.hex-copy{cursor:pointer;transition:color 0.2s;border-radius:2px;padding:1px 3px;}
+  code.hex-copy:hover{color:var(--fg);background:var(--accent-bg);}
+  .csw{display:inline-block;width:11px;height:11px;border-radius:2px;border:1px solid rgba(0,0,0,0.15);vertical-align:middle;margin-right:2px;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;}
+  .csw:hover{border-color:var(--accent-border);box-shadow:0 0 5px rgba(61,107,80,0.25);}
+  .co{border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.75;color:var(--dim);}
+  .co.blue{background:var(--blue-bg);border:1px solid var(--blue-border);}
+  .co.amber{background:var(--amber-bg);border:1px solid var(--amber-border);}
+  .co.green{background:var(--green-bg);border:1px solid var(--green-border);}
+  .co.red{background:var(--red-bg);border:1px solid var(--red-border);}
+  .co-icon{font-weight:800;margin-right:6px;}
+  .co.blue .co-icon{color:var(--blue);}
+  .co.amber .co-icon{color:var(--amber);}
+  .co.green .co-icon{color:var(--green);}
+  .co.red .co-icon{color:var(--red);}
+  /* Gradient bar */
+  .grad{border-radius:6px;overflow:hidden;}
+  .grad-label{font-size:0.6875rem;color:var(--dimmer);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+  .grad-ends{display:flex;justify-content:space-between;margin-top:4px;font-size:0.625rem;color:var(--ghost);font-family:var(--mono);}
+  .grad-ends .neutral{font-family:var(--sans);letter-spacing:0.05em;}
+  /* Swatches */
+  .sw{display:flex;gap:1px;margin-bottom:4px;}
+  .sw-item{flex:1;height:24px;border-radius:2px;border:1px solid rgba(154,166,178,0.1);}
+  .sw-label{font-size:0.6875rem;color:var(--faint);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:3px;}
+  /* HueStrip */
+  .hue-strip{display:flex;gap:2px;margin-bottom:14px;}
+  .hue-strip .hs-item{flex:1;text-align:center;}
+  .hue-strip .hs-swatch{height:28px;border-radius:3px;}
+  .hue-strip .hs-val{font-size:0.5rem;color:var(--ghost);margin-top:2px;font-family:var(--mono);}
+  /* ProblemBox */
+  .pbox{display:flex;gap:12px;background:rgba(154,166,178,0.07);border-radius:8px;padding:12px 14px;border:1px solid var(--line);margin-bottom:8px;}
+  .pbox-n{font-size:18px;font-weight:800;color:rgba(176,48,32,0.45);min-width:20px;}
+  .pbox-title{font-size:12.5px;font-weight:700;color:var(--fg);margin-bottom:3px;}
+  .pbox-desc{font-size:11.5px;color:var(--dimmer);line-height:1.65;}
+  /* Grid helpers */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin:20px 0 8px;}
+  .stat{text-align:center;padding:14px;}
+  .stat-val{font-size:24px;font-weight:800;line-height:1;color:var(--fg);}
+  .stat-lbl{font-size:8px;color:var(--faint);margin-top:5px;text-transform:uppercase;letter-spacing:0.04em;}
+  /* micro */
+  .micro{font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+  .micro.red{color:var(--red);}
+  .micro.green{color:var(--green);}
+  .micro.dim{color:var(--faint);}
+  /* feat box */
+  .feat{padding:10px 12px;background:var(--green-bg);border-radius:8px;border:1px solid var(--green-border);}
+  .feat-title{font-size:0.75rem;font-weight:700;color:var(--green);margin-bottom:3px;}
+  .feat-desc{font-size:0.6875rem;color:var(--dimmer);line-height:1.5;}
+  /* zone boxes */
+  .zone-blue{padding:10px 12px;background:var(--blue-bg);border-radius:8px;border:1px solid var(--blue-border);}
+  .zone-blue .zt{font-size:10px;font-weight:700;color:var(--blue);margin-bottom:4px;}
+  .zone-red{padding:10px 12px;background:var(--red-bg);border-radius:8px;border:1px solid var(--red-border);}
+  .zone-red .zt{font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px;}
+  .zone-val{font-size:10px;color:var(--dimmer);line-height:1.5;}
+  /* gray compare */
+  .gray-compare{display:flex;gap:12px;margin-bottom:12px;}
+  .gray-box{flex:1;background:var(--card-bg);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:center;}
+  .gray-box.after{border:1px solid var(--green-border);}
+  .gray-box.before{border:1px solid var(--card-border);}
+  .gray-swatch{width:42px;height:42px;border-radius:8px;border:2px solid rgba(154,166,178,0.2);flex-shrink:0;}
+  /* zone row */
+  .zone-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .zone-row:last-child{border-bottom:none;}
+  .zone-dot{width:8px;height:8px;border-radius:4px;margin-top:5px;flex-shrink:0;}
+  /* legend */
+  .legend{display:flex;gap:12px;margin-top:6px;}
+  .legend-item{display:flex;align-items:center;gap:4px;}
+  .legend-dot{width:8px;height:8px;border-radius:2px;}
+  .legend-text{font-size:0.625rem;color:var(--faint);}
+  .small-note{font-size:0.75rem;color:var(--dimmer);line-height:1.6;margin-top:6px;}
+  .note-10{font-size:0.6875rem;color:var(--faint);line-height:1.5;margin-top:6px;}
+  .de-fix{text-transform:none;}
+  .footer{text-align:center;padding:28px 0 36px;border-top:1px solid var(--line);font-size:10px;color:var(--ghost);line-height:2.0;font-family:var(--mono);}
+  .footer .f-title{color:var(--dimmer);}
+  .footer .f-sep{color:var(--faint);padding:0 5px;}
+  .footer .f-link{color:var(--dim);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+  /* dE boxes */
+  .de-box{flex:1;padding:8px 6px;background:var(--surface);border-radius:6px;text-align:center;border:1px solid var(--card-border);}
+  .de-box.warn{background:var(--amber-bg);border-color:var(--amber-border);}
+  .de-box.ok{background:rgba(154,166,178,0.07);border-color:var(--card-border);}
+  .de-box.good{background:var(--green-bg);border-color:var(--green-border);}
+  .de-box-val{font-size:11px;font-weight:700;color:var(--fg);}
+  .de-box-lbl{font-size:9px;color:var(--dimmer);margin-top:2px;}
+  /* dE pair demo */
+  .de-pair{flex:1;min-width:140px;background:var(--surface);border-radius:8px;padding:12px;border:1px solid var(--card-border);}
+  .de-pair-val{font-size:13px;font-weight:800;color:var(--fg);}
+  .de-pair-lbl{font-size:9px;color:var(--faint);margin-top:2px;}
+  .de-pair-note{font-size:9px;margin-top:4px;}
+  .de-pair-note.warn{color:var(--amber);}
+  .de-pair-note.ok{color:var(--dimmer);}
+  .de-pair-note.good{color:var(--green);}
+  /* table */
+  .mono-tbl{display:grid;font-size:12px;font-family:var(--mono);}
+  .mono-tbl-head{color:var(--faint);font-weight:700;border-bottom:1px solid var(--line);padding:6px 10px 6px 0;}
+  .mono-tbl-head:not(:first-child){padding:6px 10px;}
+  .mono-tbl-row{padding:5px 10px 5px 0;color:var(--dim);border-bottom:1px solid var(--line);}
+  .mono-tbl-row:not(:first-child){padding:5px 10px;}
+  .mono-tbl-row.hl{background:var(--accent-bg);color:var(--fg);font-weight:700;}
+  .green-txt{color:var(--green);}
+  .amber-txt{color:var(--amber);}
+  .red-txt{color:var(--red);}
+  @media(max-width:700px){.wrap{padding:20px 16px 60px;}h1{font-size:22px;}.grid4{grid-template-columns:1fr 1fr;}.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<nav class="xlinks">
+  <a href="clicme-pixel-color-system.html" class="active">&#9312; System kolorystyczny</a>
+  <a href="clicme-pixel-color-scale-reference.html">&#9313; Skala kolorystyczna</a>
+  <a href="clicme-scale-comparison-live.html">&#9314; Por&oacute;wnanie live</a>
+</nav>
+
+<div class="wrap">
+
+  <header style="margin-bottom:48px;padding-top:20px;">
+    <div class="tag">CliC:ME &middot; Dashboard &middot; Color System</div>
+    <h1>System kolorystyczny<br><span class="sub">dla map na dashboardzie</span></h1>
+    <div class="subtitle">Dashboard prezentuje dane migracji klimatycznej na mapie rastrowej - każdy piksel to jedna wartość na skali od silnej emigracji po silną imigrację. Skala kolorystyczna musi spełniać trzy warunki jednocześnie: zachować intuicyjny odczyt kierunku (zimne = ujemne, ciepłe = dodatnie), zapewnić percepcyjną rozróżnialność sąsiednich stepów na mapie, i osadzić się w kolorach brandowych LISER. Ta strona dokumentuje proces dojścia od czterech wstępnych, zaproponowanych propozycji do finalnej palety 33-stepowej zoptymalizowanej w CIE Lab.</div>
+    <div class="date">// 33 stepy · dywergentna blue-grey-red · 5 anchorów VS-02 · CIE Lab interpolacja · opacity 0.70</div>
+  </header>
+
+  <nav class="nav" id="nav">
+    <button data-sec="proposals">Propozycje LISER</button>
+    <button data-sec="vs02">Wybór VS-02</button>
+    <button data-sec="extension">Rozszerzenie zakresu</button>
+    <button data-sec="perception">Percepcja kolorów</button>
+    <button data-sec="lut">Korekty LUT</button>
+    <button data-sec="opacity">Opacity</button>
+    <button data-sec="mosaic">Symulacja</button>
+    <button data-sec="result">Paleta końcowa</button>
+    <button data-sec="subscales">Niepełne zakresy</button>
+  </nav>
+
+  <!-- ===== 01 ===== -->
+  <section class="sec fade-in" id="proposals">
+    <div class="sec-head"><span class="sec-num">01 //</span><h2>Propozycje kolorystyczne LISER</h2></div>
+
+    <p class="tx">Dashboard CliC:ME potrzebuje nowej skali kolorystycznej, odpowiadającej rosnącym wymaganiom stawianym przed projektem. Punktem wyjścia było uzgodnienie, że obecna paleta zastosowana w pilocie jest niewystarczająca. Na stole pojawiły się cztery warianty skali dywergentnej, oparte na podstawowych kolorach brandowych: brand navy <span style="white-space:nowrap"><span class="csw" style="background:#000066"></span><code>#000066</code></span> i brand red <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span>, z neutral grey <span style="white-space:nowrap"><span class="csw" style="background:#D9D9D9"></span><code>#D9D9D9</code></span> jako punktem zerowym. Poszczególne warianty różnią się liczbą i doborem dodatkowych punktów kontrolnych. Poniżej przegląd każdego z nich.</p>
+
+    <div class="co amber"><span class="co-icon">⚠</span> Oryginalna specyfikacja LISER opisuje ostatni step czerwony w VS-02, VS-03 i VS-03 exp jako <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span>, ale wizualnie jest to wyraźnie ciemniejszy bordowy. Przyjmujemy wartość odczytaną z grafiki: <span style="white-space:nowrap"><span class="csw" style="background:#8D1C0C"></span><code>#8D1C0C</code></span>.</div>
+
+    <div class="card fade-in">
+      <div class="lbl">VS-01 - 2 brand colors + grey</div>
+      <div class="grad" id="g-vs01" style="height:24px;margin-bottom:6px"></div>
+      <div style="font-size:11px;color:var(--dimmer);line-height:1.6">Trzy punkty kontrolne: <span style="white-space:nowrap"><span class="csw" style="background:#000066"></span><code>#000066</code></span> brand navy, <span style="white-space:nowrap"><span class="csw" style="background:#D9D9D9"></span><code>#D9D9D9</code></span> neutral grey, <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span> brand red. Minimalna konfiguracja divergent scale.</div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">VS-02 - 4 brand colors + grey</div>
+      <div class="grad" id="g-vs02" style="height:24px;margin-bottom:6px"></div>
+      <div style="font-size:11px;color:var(--dimmer);line-height:1.6">Pięć punktów: <span style="white-space:nowrap"><span class="csw" style="background:#000066"></span><code>#000066</code></span> brand navy, <span style="white-space:nowrap"><span class="csw" style="background:#0099FF"></span><code>#0099FF</code></span> sky blue, <span style="white-space:nowrap"><span class="csw" style="background:#D9D9D9"></span><code>#D9D9D9</code></span> neutral grey, <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span> brand red, <span style="white-space:nowrap"><span class="csw" style="background:#8D1C0C"></span><code>#8D1C0C</code></span> dark red. Obie strony mają punkt kontrolny w mid-zone: sky blue po stronie ujemnej, brand red po stronie dodatniej. Krawędzie wyznaczają navy i dark red.</div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">VS-03 - 4 brand + teal + pink</div>
+      <div class="grad" id="g-vs03" style="height:24px;margin-bottom:6px"></div>
+      <div style="font-size:11px;color:var(--dimmer);line-height:1.6">Wariant z tealowym akcentem <span style="white-space:nowrap"><span class="csw" style="background:#73E6D0"></span><code>#73E6D0</code></span> i różowym <span style="white-space:nowrap"><span class="csw" style="background:#E673AB"></span><code>#E673AB</code></span> w strefie bliskiej szaremu. Rozszerza gamę odcieni w jasnej strefie skali.</div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">VS-03 exp - cyan + magenta na skrajach</div>
+      <div class="grad" id="g-vs03exp" style="height:24px;margin-bottom:6px"></div>
+      <div style="font-size:11px;color:var(--dimmer);line-height:1.6">Wariant eksperymentalny z cyan <span style="white-space:nowrap"><span class="csw" style="background:#00EDBF"></span><code>#00EDBF</code></span> i magenta <span style="white-space:nowrap"><span class="csw" style="background:#FF3BA2"></span><code>#FF3BA2</code></span> jako skrajnymi punktami skali.</div>
+    </div>
+
+    <p class="tx">Każdy z wariantów wnosi konkretną wartość do dyskusji. Poniżej analiza, który z nich najlepiej spełnia wymagania kartograficzne.</p>
+  </section>
+
+  <!-- ===== 02 ===== -->
+  <section class="sec fade-in" id="vs02">
+    <div class="sec-head"><span class="sec-num">02 //</span><h2>Dlaczego VS-02 jako baza</h2></div>
+
+    <p class="tx">Spośród czterech wariantów, VS-02 okazał się jedynym, który łączy wystarczającą kontrolę nad gradacjami z zachowaniem intuicyjnej czytelności skali dywergentnej.</p>
+
+    <div class="card fade-in">
+      <div class="lbl">VS-01: niewystarczająca kontrola</div>
+      <div class="grad" id="g-vs01b" style="height:20px;margin-bottom:10px"></div>
+      <p class="tx">Tylko dwa punkty kolorystyczne i szary pośrodku - zbyt mało, by zapewnić kontrolę nad granulacją skali. Interpolacja RGB między brand navy a grey generuje brudne fiolety w strefie L*=30–60, a cała skala ma silną inklinację w kierunku szarego: większość wartości pośrednich wypada jako blade, mało nasycone tony. Brak punktu kontrolnego w strefie mid-blue uniemożliwia sterowanie przejściem kolorystycznym tam, gdzie na mapie gromadzi się najwięcej danych.</p>
+    </div>
+
+    <div class="card fade-in amber">
+      <div class="lbl">VS-03 / VS-03 exp: problem z odczytem polaryzacji</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div style="flex:1"><div class="micro dim">VS-03</div><div class="grad" id="g-vs03b" style="height:20px"></div></div>
+        <div style="flex:1"><div class="micro dim">VS-03 EXP</div><div class="grad" id="g-vs03expb" style="height:20px"></div></div>
+      </div>
+      <p class="tx">Skala dywergentna opiera się na fundamentalnej konwencji: <strong>chłodne odcienie = wartości ujemne</strong>, <strong>ciepłe odcienie = wartości dodatnie</strong>. Odbiorca intuicyjnie odczytuje temperaturę kolorystyczną bez sięgania do legendy.</p>
+
+      <div class="pbox"><div class="pbox-n">1</div><div><div class="pbox-title">Teal jest kolorem ciepłym</div><div class="pbox-desc">Jasny, nasycony zielonkawy odcień intuicyjnie nie kojarzy się z „minus" / wartość ujemna. Odbiorca widzi jasną plamę i nie wie, czy to strefa bliska zeru, czy ujemna wartość.</div></div></div>
+      <div class="pbox"><div class="pbox-n">2</div><div><div class="pbox-title">Róż odsuwa się od osi ciepłej</div><div class="pbox-desc">Pink <span style="white-space:nowrap"><span class="csw" style="background:#E673AB"></span><code>#E673AB</code></span> jest chłodniejszy niż brand red - przesunięcie w stronę fioletu osłabia odczyt „ciepłe = plus". Użytkownik traci natychmiastową intuicję polaryzacji.</div></div></div>
+      <div class="pbox"><div class="pbox-n">3</div><div><div class="pbox-title">VS-03 exp: profil jasności W</div><div class="pbox-desc">Cyan i magenta na skrajach są jasne (L*=87 i L*=56). Ekstrema powinny być najciemniejsze. Jasny region może oznaczać „blisko zera" lub „skrajne minimum" - użytkownik nie odróżni.</div></div></div>
+
+      <div class="co amber"><span class="co-icon">⚠</span> Dywergentne schematy kolorów w kartografii tematycznej: mapa przedstawia odchylenia od punktu neutralnego (średniej, zera). Dwie kontrastujące barwy z jasnym, neutralnym kolorem pośrodku ułatwiają natychmiastową identyfikację skupisk wysokich lub niskich wartości. Odbiorca musi odczytać <strong>kierunek</strong> (ujemne vs dodatnie) i <strong>intensywność</strong> (słaba vs silna) bez sięgania do legendy. Wieloodcieniowe warianty komplikują ten natychmiastowy odczyt.</div>
+    </div>
+
+    <div class="card fade-in green">
+      <div class="lbl">VS-02: optymalna baza</div>
+      <div class="grad" id="g-vs02b" style="height:24px;margin-bottom:12px"></div>
+      <div class="grid2" style="gap:12px">
+        <div class="feat"><div class="feat-title">Czysta polaryzacja</div><div class="feat-desc">Niebieski = minus, czerwony = plus. Brak odcieni łamiących intuicję. Użytkownik odczytuje kierunek zmiany z samego koloru, bez sięgania do legendy.</div></div>
+        <div class="feat"><div class="feat-title">Kontrola mid-zone</div><div class="feat-desc">Obie strony skali mają pośredni punkt kontrolny w mid-zone: <span style="white-space:nowrap"><span class="csw" style="background:#0099FF"></span><code>#0099FF</code></span> sky blue (L*=62) po stronie ujemnej, <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span> brand red (L*=48) po stronie dodatniej.</div></div>
+        <div class="feat"><div class="feat-title">Brand-consistent</div><div class="feat-desc">Oparta wyłącznie na kolorach LISER: brand navy, sky, grey, brand red.</div></div>
+        <div class="feat"><div class="feat-title">Rozszerzalna</div><div class="feat-desc">Możliwość dodania ciemniejszych tonów poza brand anchors.</div></div>
+      </div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Dlaczego 33 stepy zamiast oryginalnych 8</div>
+      <p class="tx">Oryginalna 8-krokowa skala zielono-czerwona z interpolacją została zaprojektowana jako rozwiązanie inicjalne dla pilota CliC:ME i realizowała pierwotne założenia. Wraz z dalszym rozwojem dashboardu, feedbackiem użytkowników i rosnącymi potrzebami analitycznymi, stała się niewystarczająca:</p>
+
+      <div class="pbox"><div class="pbox-n">1</div><div><div class="pbox-title">Zbyt duże uogólnienia danych</div><div class="pbox-desc">Osiem stepów to za mało, by oddać różnorodność wartości migracyjnych. Regiony o bardzo różnych wartościach wyświetlały się tym samym kolorem - użytkownik tracił informacje o gradacji zjawiska.</div></div></div>
+      <div class="pbox"><div class="pbox-n">2</div><div><div class="pbox-title">Brak neutralnego szarego na wartości bliskie zeru</div><div class="pbox-desc">W 8-stepowej skali nie było wyraźnie wyodrębnionej strefy neutralnej. Wartości bliskie zeru (statystycznie nieistotne) wyświetlały się jako słabo nasycone kolory zamiast czystego szarego - na mapie pojawiał się szum kolorystyczny zamiast wygaszenia środka.</div></div></div>
+      <div class="pbox"><div class="pbox-n">3</div><div><div class="pbox-title">Ryzyko dla czytelności przy małej liczbie stepów</div><div class="pbox-desc">Przy 8 stepach każdy skok kolorystyczny jest duży i ostry. Mapa wygląda jak mozaika plam zamiast płynnego obrazu zjawiska. Odbiorca widzi granice między stepami, nie trend.</div></div></div>
+
+      <p class="tx" style="margin-top:14px">Ile stepów potrzebuje skala dywergencyjna z pięcioma anchorami (4 segmenty)? Liczba stepów musi spełniać warunek <strong>4k+1</strong> - tylko wtedy każdy anchor trafia dokładnie na step. Testowaliśmy kolejne dopuszczalne warianty:</p>
+
+      <div style="overflow-x:auto;margin:12px 0 14px;">
+        <div style="display:grid;grid-template-columns:auto auto auto auto auto auto;gap:0;font-size:12px;font-family:var(--mono);min-width:480px;">
+          <div class="mono-tbl-head">Steps</div>
+          <div class="mono-tbl-head" style="white-space:nowrap">Zakres/step<br><span style="font-weight:400;font-size:10px">(precyzja)</span></div>
+          <div class="mono-tbl-head">Avg dE</div>
+          <div class="mono-tbl-head">Min dE</div>
+          <div class="mono-tbl-head" style="white-space:nowrap">Niewidoczne<br><span style="font-weight:400;font-size:10px">(dE &lt; 3)</span></div>
+          <div class="mono-tbl-head" style="white-space:nowrap">Trudne na mapie<br><span style="font-weight:400;font-size:10px">(dE &lt; 5)</span></div>
+
+          <div class="mono-tbl-row" style="padding-left:0">13</div><div class="mono-tbl-row red-txt">±167</div><div class="mono-tbl-row">23.0</div><div class="mono-tbl-row green-txt">11.6</div><div class="mono-tbl-row green-txt">0</div><div class="mono-tbl-row green-txt">0</div>
+          <div class="mono-tbl-row" style="padding-left:0">21</div><div class="mono-tbl-row red-txt">±100</div><div class="mono-tbl-row">13.9</div><div class="mono-tbl-row green-txt">6.8</div><div class="mono-tbl-row green-txt">0</div><div class="mono-tbl-row green-txt">0</div>
+          <div class="mono-tbl-row" style="padding-left:0">25</div><div class="mono-tbl-row amber-txt">±83</div><div class="mono-tbl-row">11.6</div><div class="mono-tbl-row green-txt">5.6</div><div class="mono-tbl-row green-txt">0</div><div class="mono-tbl-row green-txt">0</div>
+          <div class="mono-tbl-row" style="padding-left:0">29</div><div class="mono-tbl-row amber-txt">±71</div><div class="mono-tbl-row">9.9</div><div class="mono-tbl-row amber-txt">4.7</div><div class="mono-tbl-row green-txt">0</div><div class="mono-tbl-row amber-txt">2</div>
+          <div class="mono-tbl-row hl" style="padding-left:0">33</div><div class="mono-tbl-row hl green-txt">±62</div><div class="mono-tbl-row hl">8.7</div><div class="mono-tbl-row hl amber-txt">4.0</div><div class="mono-tbl-row hl green-txt">0</div><div class="mono-tbl-row hl amber-txt">7</div>
+          <div class="mono-tbl-row" style="padding-left:0">37</div><div class="mono-tbl-row green-txt">±56</div><div class="mono-tbl-row">7.7</div><div class="mono-tbl-row amber-txt">3.6</div><div class="mono-tbl-row green-txt">0</div><div class="mono-tbl-row amber-txt">9</div>
+          <div class="mono-tbl-row" style="padding-left:0">45</div><div class="mono-tbl-row green-txt">±45</div><div class="mono-tbl-row">6.3</div><div class="mono-tbl-row red-txt">2.7</div><div class="mono-tbl-row red-txt">1</div><div class="mono-tbl-row red-txt">11</div>
+          <div class="mono-tbl-row" style="padding-left:0;border-bottom:none">65</div><div class="mono-tbl-row green-txt" style="border-bottom:none">±31</div><div class="mono-tbl-row" style="border-bottom:none">4.4</div><div class="mono-tbl-row red-txt" style="border-bottom:none">1.9</div><div class="mono-tbl-row red-txt" style="border-bottom:none">16</div><div class="mono-tbl-row red-txt" style="border-bottom:none">46</div>
+        </div>
+      </div>
+      <p class="small-note">Wartości dE z naiwnej interpolacji liniowej RGB między anchorami VS-02 - uczciwa baza porównawcza przed korektami hue i LUT.</p>
+      <p class="tx" style="margin-top:12px">Czytając tabelę od góry: precyzja rośnie z każdym krokiem, ale kolumny dE zaczynają żółknieć i czerwienieć. Od dołu: percepcja jest katastrofalna, ale precyzja świetna. Gdzieś pośrodku te dwa ograniczenia się krzyżują.</p>
+      <p class="tx">Przy 13–21 stepach kolory są pięknie rozróżnialne, ale ±100–167 jednostek na step oznacza, że pixel z saldem +50 i pixel z +200 dostają ten sam kolor - różnice w danych znikają w uśrednieniu. Przy 45+ stepach precyzja jest dobra, ale pojawiają się pierwsze pary z dE poniżej 3 - kolory nierozróżnialne okiem na mapie. Przy 65 stepach 16 par jest niewidocznych.</p>
+      <p class="tx">Wariant <strong>33</strong> to ostatni poziom, w którym żadna para nie spada poniżej dE 3 przy jednoczesnej precyzji ±62 jednostek - wystarczającej do odczytu trendów przestrzennych na poziomie pojedynczych pixeli. Krok wyżej (37) daje marginalny zysk precyzji (±56 vs ±62), ale 9 par trudnych na mapie zamiast 7. Krok niżej (29) - zero problemów percepcyjnych, ale ±71 to próg, przy którym drobne różnice przestrzenne zaczynają się zacierać.</p>
+      <p class="tx">Finalna paleta po korektach hue i LUT ma min dE = 3.4 (idx 22–23, strefa brand red) - szczegóły tego trade-offu w sekcji percepcji kolorów.</p>
+    </div>
+  </section>
+
+  <!-- ===== 03 ===== -->
+  <section class="sec fade-in" id="extension">
+    <div class="sec-head"><span class="sec-num">03 //</span><h2>Rozszerzenie zakresu tonalnego</h2></div>
+
+    <div class="card fade-in">
+      <div class="lbl">Przesunięcie kolorów wyjściowych i rozszerzenie krawędzi</div>
+      <p class="tx">VS-02 operuje od brand navy <span style="white-space:nowrap"><span class="csw" style="background:#000066"></span><code>#000066</code></span> (L*=9) przez sky blue <span style="white-space:nowrap"><span class="csw" style="background:#0099FF"></span><code>#0099FF</code></span> (L*=62) i neutral grey <span style="white-space:nowrap"><span class="csw" style="background:#D9D9D9"></span><code>#D9D9D9</code></span> (L*=87), przez brand red <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span> (L*=48) do dark red <span style="white-space:nowrap"><span class="csw" style="background:#8D1C0C"></span><code>#8D1C0C</code></span> (L*=31). Pierwotnym założeniem było zachowanie tych kolorów brandingowych na skrajach skali. W praktyce okazało się to nieefektywne z dwóch powodów:</p>
+      <p class="tx"><strong>Po pierwsze</strong> - wartości ekstremalne stanowią marginalny udział w danych. Większość pixeli na mapie skupia się wokół median i wartości umiarkowanych. Kolory na krawędziach skali pojawiają się rzadko, niezależnie od tego jakie są.</p>
+      <p class="tx"><strong>Po drugie</strong> - przy opacity (wymóg dla pixeli) i nałożeniu na baselayer mapy, kolory i tak tracą swoją oryginalną charakterystykę na tyle, że rozpoznawalność brandingowa nie jest realistycznym celem dla skali kartograficznej.</p>
+      <p class="tx">Zamiast tego postawiliśmy na <strong>maksymalne nacechowanie krawędzi skali</strong>: wyciągnięcie ekstremalnych stepów w ciemniejsze barwy, znacznie wykraczające poza oryginalną selekcję LISER. Ciemniejsze ekstrema dają silniejszy kontrast wizualny - nawet jeśli pojawiają się rzadko, to gdy się pojawią, natychmiast przyciągają uwagę i sygnalizują wartości skrajne. Kolory wyjściowe LISER (brand navy, brand red) przesunęły się naturalnie w strefę mid-range, gdzie gromadzi się najwięcej danych i gdzie są najczęściej widoczne.</p>
+    </div>
+
+    <p class="tx">Mapy dostępne obecnie w ramach dashboardu CliC:ME mają różne rozpiętości danych - na potrzeby opracowania skali przyjęliśmy roboczy zakres od -1000 do +1000. Oryginalna selekcja LISER była zbyt wąska: po rozciągnięciu na 33 stepy <strong>ciemne tony zlewają się percepcyjnie</strong> - po obu stronach skali. Poniżej konkretne problemy i efekt rozszerzenia.</p>
+
+    <div class="card fade-in">
+      <div class="lbl">Strona niebieska (wartości ujemne)</div>
+      <div class="micro red">Problem: zlewanie ciemnych stepów</div>
+      <div class="sw-label">Interpolacja VS-02: L*=2, 3, 5, 6, 7, 9</div>
+      <div class="sw" id="sw-blue-before"></div>
+      <p class="tx">Sześć najciemniejszych stepów mieści się w L*=2–9 - zakresie, w którym rozróżnialność drastycznie spada. Skrajne stepy da się jeszcze wyłapać, ale <strong>na małych kształtach (pixel-level) różnice między sąsiednimi stepami są praktycznie nieczytelne</strong>. Na mapie region o wartości -700 i -900 wymaga wpatrywania się, by dostrzec jakąkolwiek zmianę.</p>
+      <div class="micro green" style="margin-top:14px">Po rozszerzeniu</div>
+      <div class="sw-label">Stepy 0–9: L*=5, 8, 12, 15, 18, 22, 26, 30, 34, 38</div>
+      <div class="sw" id="sw-blue-after"></div>
+      <p class="small-note">Rozszerzenie od <span style="white-space:nowrap"><span class="csw" style="background:#000066"></span><code>#000066</code></span> (L*=9) w dół do <span style="white-space:nowrap"><span class="csw" style="background:#0C0343"></span><code>#0C0343</code></span> (L*=5), z równomiernym rozkładem co ~3.5 L* na step. Średnia różnica percepcyjna: <strong>dE = 4.9</strong> (zakres 4.1–6.1).</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Strona czerwona (wartości dodatnie)</div>
+      <div class="micro red">Problem: za wąski zakres ciemnych tonów</div>
+      <div class="sw-label">Ściemnianie od dark red: L*=31, 24, 17, 10, 3, 1</div>
+      <div class="sw" id="sw-red-before"></div>
+      <p class="tx">Najciemniejszy step LISER <span style="white-space:nowrap"><span class="csw" style="background:#8D1C0C"></span><code>#8D1C0C</code></span> startuje dopiero z L*=31 - jest już w ciemnym zakresie. Naiwne ściemnianie szybko wpada w nierozróżnialne brunatno-czarne tony. Cały zakres LISER po stronie czerwonej (L*=48→31) to zaledwie 17 jednostek L* - <strong>za mało na 10 stepów</strong>, które powinny pokryć L*=43→10.</p>
+      <div class="micro green" style="margin-top:14px">Po rozszerzeniu</div>
+      <div class="sw-label">Stepy 23–32: L*=43 w dół do L*=10</div>
+      <div class="sw" id="sw-red-after"></div>
+      <p class="small-note">Rozszerzenie poza zakres LISER - od brand red <span style="white-space:nowrap"><span class="csw" style="background:#E30613"></span><code>#E30613</code></span> (L*=48) przez dark red <span style="white-space:nowrap"><span class="csw" style="background:#8D1C0C"></span><code>#8D1C0C</code></span> (L*=31) aż do <span style="white-space:nowrap"><span class="csw" style="background:#3E040B"></span><code>#3E040B</code></span> (L*=10). Średnia różnica percepcyjna: <strong>dE = 7.5</strong> (zakres 5.4–8.9).</p>
+    </div>
+  </section>
+
+  <!-- ===== 04 ===== -->
+  <section class="sec fade-in" id="perception">
+    <div class="sec-head"><span class="sec-num">04 //</span><h2>Percepcja kolorów i ograniczenia monitora</h2></div>
+
+    <p class="tx">Standardowa przestrzeń RGB, w której operują monitory i przeglądarki, nie jest percepcyjnie równomierna - różnica 10 jednostek w ciemnych tonach wygląda inaczej niż ta sama różnica w jasnych. Dwa kolory „równo oddalone" w RGB mogą wyglądać identycznie lub drastycznie różnie, w zależności od miejsca w przestrzeni. HSL (Hue-Saturation-Lightness) jest lepszy intuicyjnie, ale również nie jest percepcyjnie skalibrowany - „Lightness" w HSL nie odpowiada temu, jak ludzkie oko faktycznie odbiera jasność.</p>
+    <p class="tx"><strong>CIE L*a*b*</strong> (1976) to przestrzeń zaprojektowana specjalnie tak, by odległość euklidesowa między dwoma punktami odpowiadała percepcyjnej różnicy widzianej przez człowieka. Jest standardem w kartografii, GIS i kolorystyce przemysłowej właśnie dlatego, że pozwala mierzyć „ile różnicy widzi oko" zamiast „ile różnicy jest w sygnale monitora".</p>
+
+    <div class="card fade-in">
+      <div class="lbl">Przestrzeń CIE L*a*b* - trzy składowe</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div><div style="font-size:18px;font-weight:800;color:var(--fg)">L*</div><div style="font-size:10px;font-weight:600;color:var(--dimmer);margin-top:4px">Jasność</div><div style="font-size:9.5px;color:var(--faint);line-height:1.5;margin-top:4px">0 = czarny, 100 = biały. Percepcyjnie skalibrowana - różnica L*=10 wygląda „tak samo duża" niezależnie od miejsca na skali. To główna oś rozróżniania na mapie.</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:#7c3aed">a*</div><div style="font-size:10px;font-weight:600;color:var(--dimmer);margin-top:4px">Oś zielony–czerwony</div><div style="font-size:9.5px;color:var(--faint);line-height:1.5;margin-top:4px">Wartości ujemne = zielony, dodatnie = czerwony. W połączeniu z b* definiuje odcień i nasycenie (chroma C* = √(a²+b²)).</div></div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--blue)">b*</div><div style="font-size:10px;font-weight:600;color:var(--dimmer);margin-top:4px">Oś niebieski–żółty</div><div style="font-size:9.5px;color:var(--faint);line-height:1.5;margin-top:4px">Wartości ujemne = niebieski, dodatnie = żółty. Razem z a* tworzy płaszczyznę chromatyczną; odcień (hue) to kąt w tej płaszczyźnie.</div></div>
+      </div>
+      <p class="tx" style="margin-top:14px">W praktyce kartograficznej operujemy na pochodnych: <strong>L*</strong> (jasność), <strong>C*</strong> (chroma = nasycenie = odległość od osi szarości) i <strong>h</strong> (hue = odcień w stopniach: 0°=czerwony, 90°=żółty, 180°=cyan, 270°=niebieski). Ten układ LCh jest bardziej intuicyjny przy projektowaniu skali kolorystycznej, bo pozwala niezależnie kontrolować „jak jasne", „jak nasycone" i „jaki odcień".</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Delta E (<span class="de-fix">dE</span>) - mierzalna różnica percepcyjna</div>
+      <p class="tx">Skoro CIE L*a*b* jest percepcyjnie równomierna, to odległość euklidesowa między dwoma kolorami w tej przestrzeni (dE = √(ΔL² + Δa² + Δb²)) mówi wprost: <strong>ile różnicy widzi ludzkie oko</strong>. To nie abstrakcyjna metryka - to narzędzie, które pozwala projektować skalę kolorystyczną z gwarancją, że sąsiednie stepy będą rozróżnialne na mapie.</p>
+      <div style="display:flex;gap:3px;margin:14px 0 10px">
+        <div class="de-box ok"><div class="de-box-val">dE poniżej 1</div><div class="de-box-lbl">Niewidoczna</div></div>
+        <div class="de-box warn"><div class="de-box-val">dE 1–3</div><div class="de-box-lbl">Subtelna</div></div>
+        <div class="de-box warn"><div class="de-box-val">dE 3–5</div><div class="de-box-lbl">Widoczna</div></div>
+        <div class="de-box good"><div class="de-box-val">dE powyżej 5</div><div class="de-box-lbl">Oczywista</div></div>
+      </div>
+      <p class="tx">Na mapie warunki odczytu są trudniejsze niż przy porównywaniu dwóch kolorów obok siebie: pixele są małe, leżą obok siebie w chaotycznej mozaice, tło kartograficzne przebija przez opacity. Dlatego praktyczny próg rozróżnialności (JND - Just Noticeable Difference) na mapie to <strong>dE około 5</strong>, wyższy niż teoretyczne ~2.5 przy idealnych warunkach. Każdy sąsiedni step naszej skali musi przekraczać ten próg, żeby użytkownik mógł odczytać różnicę intensywności bez porównywania z legendą.</p>
+      <div style="margin-top:16px">
+        <div class="lbl">Jak wygląda <span class="de-fix">dE</span> w praktyce - rzeczywiste pary z naszej palety</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <div class="de-pair">
+            <div style="display:flex;gap:0;margin-bottom:8px"><div style="width:50%;height:40px;background:#e13f47;border-radius:4px 0 0 4px"></div><div style="width:50%;height:40px;background:#dc3f49;border-radius:0 4px 4px 0"></div></div>
+            <div class="de-pair-val">dE = 3.4</div>
+            <div class="de-pair-lbl">Sąsiednie stepy mid/dark red (idx 22–23)</div>
+            <div class="de-pair-note warn">Blisko progu widoczności</div>
+          </div>
+          <div class="de-pair">
+            <div style="display:flex;gap:0;margin-bottom:8px"><div style="width:50%;height:40px;background:#40a6f3;border-radius:4px 0 0 4px"></div><div style="width:50%;height:40px;background:#40b6fc;border-radius:0 4px 4px 0"></div></div>
+            <div class="de-pair-val">dE = 8.2</div>
+            <div class="de-pair-lbl">Sąsiednie stepy mid blue (idx 12–13)</div>
+            <div class="de-pair-note ok">Widoczna zmiana</div>
+          </div>
+          <div class="de-pair">
+            <div style="display:flex;gap:0;margin-bottom:8px"><div style="width:50%;height:40px;background:#f38c6c;border-radius:4px 0 0 4px"></div><div style="width:50%;height:40px;background:#ec725d;border-radius:0 4px 4px 0"></div></div>
+            <div class="de-pair-val">dE = 11.4</div>
+            <div class="de-pair-lbl">Sąsiednie stepy mid red (idx 19–20)</div>
+            <div class="de-pair-note good">Wyraźna różnica</div>
+          </div>
+        </div>
+      </div>
+      <p class="note-10" style="margin-top:14px">Strefa idx 21–23 (przejście mid → dark red) to najwęższe gardło palety. W tym zakresie L* spada minimalnie (47→43), a gamut sRGB dla czystych czerwieni jest prawie płaski - chroma jest na maksimum, więc hue shift nie ma jeszcze pola manewru. To świadomy trade-off: utrzymujemy brand red jako anchor mid-zone, kosztem ciaśniejszego przejścia tuż za nim. Reszta dark-red (idx 23–32) jedzie komfortowo z dE 5.4–8.9.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Gamut sRGB - ograniczenia monitora</div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div class="zone-blue" style="flex:1"><div class="zt">Niebieski (h=270)</div><div class="zone-val">Max chroma spada powyżej L*=60. Przy L*=75: C* zaledwie 42.</div></div>
+        <div class="zone-red" style="flex:1"><div class="zt">Czerwony (h=35)</div><div class="zone-val">Szerszy gamut: C*=80+ do L*=55, ale traci poniżej L*=20.</div></div>
+      </div>
+      <p class="tx">Ta asymetria gamutu bezpośrednio wpływa na naszą skalę. Strona niebieska jest trudniejsza - przy wysokich jasnościach (jasne niebieskie bliżej strefy neutralnej) monitor nie jest w stanie wyświetlić nasyconego niebieskiego. Dlatego w jasnej strefie niebieskiej przesuwamy hue w kierunku cyjan (h=250), gdzie gamut sRGB jest szerszy i pozwala na wyższe C*. Strona czerwona ma więcej przestrzeni - ale w ciemnych tonach (L* poniżej 20) również traci nasycenie, co wymaga kompensacji przez hue shift w kierunku ciepłego brązu (h=22).</p>
+    </div>
+
+    <p class="tx">Oba ograniczenia - spadek chroma w jasnych niebieskich i w ciemnych czerwonych - oznaczają, że prosta interpolacja liniowa między punktami LISER nie wystarczy. Konieczne są korekty hue (opisane w sekcji 05), które wykorzystują dostępny gamut maksymalnie, zamiast trzymać się sztywno jednego odcienia na całej długości ramienia skali.</p>
+    <p class="tx">Cała optymalizacja skali - dobór jasności, przesunięcia hue, korekty chroma, kalkulacja dE między sąsiednimi stepami - odbywa się w przestrzeni CIE L*a*b*, gdzie odległości percepcyjne są mierzalne i porównywalne. Jednak technologia wyświetlania (monitory, przeglądarki, Mapbox, Leaflet) operuje wyłącznie w przestrzeni sRGB. Dlatego końcowym etapem jest <strong>translacja każdego z 33 stepów z L*a*b* na wartości RGB (hex)</strong>.</p>
+    <p class="tx">Translacja ta nie jest bezstratna - gamut sRGB jest mniejszy niż przestrzeń L*a*b*, więc nie każdy kolor zaprojektowany w Lab da się wiernie odwzorować na monitorze. Przy konwersji stosujemy <strong>gamut clipping z zachowaniem jasności L*</strong> jako priorytetu: jeśli dany punkt Lab wypada poza sRGB, redukujemy chroma (nasycenie) przy niezmienionej jasności i odcieniu, tak by przejścia percepcyjne między sąsiednimi stepami były jak najbardziej równomierne w finalnych wartościach hex. Ostateczne kolory palety (<span style="white-space:nowrap"><span class="csw" style="background:#0C0343"></span><code>#0C0343</code></span> → ... → <span style="white-space:nowrap"><span class="csw" style="background:#3E040B"></span><code>#3E040B</code></span>) to wynik tej translacji.</p>
+  </section>
+
+  <!-- ===== 05 ===== -->
+  <section class="sec fade-in" id="lut">
+    <div class="sec-head"><span class="sec-num">05 //</span><h2>Wewnętrzne korekty LUT</h2></div>
+
+    <p class="tx">Na bazie VS-02 z rozszerzonym zakresem ciemnych tonów przeprowadziliśmy korekty Look-Up Table, by zmaksymalizować rozróżnialność sąsiadujących stepów.</p>
+
+    <div class="card fade-in">
+      <div class="lbl">Korekta 1: Hue shift - strona niebieska</div>
+      <div class="micro dim">Przed korektą - stały hue ~270 (czysty niebieski)</div>
+      <div class="sw" id="sw-lut-blue-before"></div>
+      <div class="micro green" style="margin-top:10px">Po korekcie - progresja hue 305° → 250°</div>
+      <div class="hue-strip" id="hs-blue-after"></div>
+      <p class="tx">Stopniowe przesunięcie odcienia: od 305 (granatowo-fioletowy) w najciemniejszych, przez 285 (cobalt) w środku, do 250 (niebieski z lekkim cyjanem) w najjaśniejszych. Każdy step zyskuje unikatowy odcień - różnice percepcyjne rosną, bo oko rozróżnia zarówno zmianę jasności jak i zmianę odcienia jednocześnie.</p>
+      <p class="small-note">Korzyści gamutowe: przy L*=75, przesunięcie z h=270 na h=250 podnosi dostępne C* z 42 do 46. Połączenie z odmiennym odcieniem daje <strong>dE około 11</strong> między sąsiednimi stepami w mid-zone (zamiast ~4 bez korekty).</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Korekta 2: Hue shift - strona czerwona</div>
+      <div class="micro dim">Przed korektą - stały hue ~38 (brand red)</div>
+      <div class="sw" id="sw-lut-red-before"></div>
+      <div class="micro green" style="margin-top:10px">Po korekcie - progresja hue 52° → 22°</div>
+      <div class="hue-strip" id="hs-red-after"></div>
+      <p class="tx">Od ciepłego pomarańczowego (h=52) w jasnych tonach, przez brand red (h=38), do ciepłego brązu (h=22) w najciemniejszych. Przy niskim L* oko wciąż rozróżnia zmiany odcienia, nawet gdy różnice jasności są minimalne.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Korekta 3: Neutralny szary</div>
+      <div class="gray-compare">
+        <div class="gray-box before">
+          <div class="gray-swatch" style="background:#D9D9D9"></div>
+          <div><div class="micro dim">Przed</div><div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px">#D9D9D9</div><div style="font-size:9px;color:var(--ghost)">L*=87</div></div>
+        </div>
+        <div class="gray-box after">
+          <div class="gray-swatch" style="background:#EDEDED"></div>
+          <div><div class="micro green">Po korekcie</div><div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px">#EDEDED</div><div style="font-size:9px;color:var(--ghost)">L*=94</div></div>
+        </div>
+      </div>
+      <p class="tx">Oryginalny <span style="white-space:nowrap"><span class="csw" style="background:#D9D9D9"></span><code>#D9D9D9</code></span> (L*=87) na mapie z baselayerem lądu (<span style="white-space:nowrap"><span class="csw" style="background:#fffdfb"></span><code>#fffdfb</code></span>) i opacity 0.70 dawał brudny, lekko żółtawy ton zamiast czystego neutralu. Po nałożeniu opacity: efektywny kolor na lądzie to L*=91 - zbyt ciemny i wyrazisty jak na strefę wartości bliskich zeru. Korekta do <span style="white-space:nowrap"><span class="csw" style="background:#EDEDED"></span><code>#EDEDED</code></span> (L*=94) po nałożeniu na baselayer daje efektywne L*=95 - subtelne, ale wciąż odróżnialne od czystego tła mapy. To ważne rozróżnienie: <strong>szary pixel oznacza „tu są dane, ale wartość jest bliska zeru"</strong>, natomiast brak danych to brak pixela - baselayer przebija się w pełni. Dzięki korekcie strefa neutralna jest dyskretna i nie skupia na sobie uwagi, ale pozostaje widoczna jako informacja o pokryciu danych.</p>
+    </div>
+  </section>
+
+  <!-- ===== 06 ===== -->
+  <section class="sec fade-in" id="opacity">
+    <div class="sec-head"><span class="sec-num">06 //</span><h2>Opacity i warstwa bazowa mapy</h2></div>
+
+    <p class="tx">Na dashboardzie CliC:ME skala kolorystyczna jest nakładana na baselayer mapy (ląd, drogi, granice, etykiety) z <strong>opacity 0.70</strong> (70%). Oznacza to, że kolory palety bledną o ~30% względem swoich wartości źródłowych - tło mapy przebija się przez warstwę danych.</p>
+
+    <div class="card fade-in">
+      <div class="lbl">Porównanie: paleta źródłowa vs wygląd na mapie</div>
+      <div style="display:flex;gap:3px;margin-bottom:10px" id="opacity-compare"></div>
+      <p class="tx">Górny rząd: pełne kolory z palety. Dolny: po nałożeniu na baselayer z opacity 0.70. Dlatego paleta musi być intensywniejsza niż docelowy efekt wizualny na mapie.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Efektywne <span class="de-fix">dE</span> na mapie</div>
+      <p class="tx">Po nałożeniu opacity 0.70 na tło lądu (<span style="white-space:nowrap"><span class="csw" style="background:#fffdfb"></span><code>#fffdfb</code></span>), efektywne różnice percepcyjne spadają średnio o ~30%. Obliczone wartości dla każdej strefy skali:</p>
+      <div class="grid2" style="gap:10px">
+        <div class="zone-blue"><div class="zt">Dark blue (idx 0–9)</div><div class="zone-val">Paleta: dE = 4.9<br>Na mapie: <strong>dE = 3.6</strong> (blisko progu widoczności)</div></div>
+        <div class="zone-blue"><div class="zt">Mid blue (idx 10–15)</div><div class="zone-val">Paleta: dE = 10.7<br>Na mapie: <strong>dE = 8.2</strong></div></div>
+        <div class="zone-red"><div class="zt">Mid red (idx 17–22)</div><div class="zone-val">Paleta: dE = 10.9<br>Na mapie: <strong>dE = 10.4</strong></div></div>
+        <div class="zone-red"><div class="zt">Dark red (idx 23–32)</div><div class="zone-val">Paleta: dE = 7.5<br>Na mapie: <strong>dE = 5.9</strong></div></div>
+      </div>
+    </div>
+
+    <div class="co amber"><span class="co-icon">⚠</span> Najtrudniejsza strefa to ciemne niebieskie (idx 0–9) - efektywne dE = 3.6 jest blisko progu widoczności. To jest powód, dla którego korekty hue w sekcji 05 są tak istotne: bez nich te stepy byłyby praktycznie nierozróżnialne na mapie.</div>
+
+    <p class="tx">Na rzeczywistej mapie dane nie tworzą płynnych, odseparowanych stref - niebieskie i czerwone pixele sąsiadują ze sobą bezpośrednio, tworząc mozaikę. Jest to wynik zarówno natury danych (migracja to zjawisko lokalne, wartości zmieniają się z pixela na pixel), jak i <strong>ograniczeń technologicznych</strong>: nie ma możliwości nałożenia borderów ani separatorów na poszczególne pixele danych. Pixel o wartości -200 może leżeć bezpośrednio obok pixela o wartości +150.</p>
+    <p class="tx">To sprawia, że <strong>rozróżnialność sąsiednich stepów jest jeszcze ważniejsza</strong> niż sugerują same wartości dE - oko musi odczytać kierunek i intensywność z pojedynczego pixela w otoczeniu pixeli o potencjalnie odwrotnym znaku. Hue shift (sekcja 05) i wysoka separacja dE w mid-zone pomagają: nawet pojedynczy pixel ma wystarczająco odmienny kolor, by odbiorca rozpoznał jego stronę skali bez porównywania z sąsiadami.</p>
+    <p class="tx">Powyższe obliczenia dotyczą baselayera lądu (<span style="white-space:nowrap"><span class="csw" style="background:#fffdfb"></span><code>#fffdfb</code></span>). Na tle wód (<span style="white-space:nowrap"><span class="csw" style="background:#effafb"></span><code>#effafb</code></span>) i dróg (<span style="white-space:nowrap"><span class="csw" style="background:#ffcc88"></span><code>#ffcc88</code></span>) wartości będą się różnić. Kolory baselayera mogą być korygowane w kolejnym etapie prac.</p>
+  </section>
+
+  <!-- ===== 07 ===== -->
+  <section class="sec fade-in" id="mosaic">
+    <div class="sec-head"><span class="sec-num">07 //</span><h2>Symulacja mozaiki na mapie</h2></div>
+
+    <p class="tx">Poniżej symulacja wizualna oddająca sposób, w jaki skala kolorystyczna prezentuje się na baselayerze mapy. Każdy kwadrat to jeden pixel danych nałożony z opacity 0.70 na tło lądu (<span style="white-space:nowrap"><span class="csw" style="background:#fffdfb"></span><code>#fffdfb</code></span>). Białe luki to brak danych - baselayer przebija się w pełni. Kluczowe: niebieskie i czerwone pixele mieszają się przestrzennie, dokładnie jak na rzeczywistej mapie - nie ma czystego rozdzielenia stref.</p>
+
+    <div class="card fade-in" style="padding:12px;overflow:hidden">
+      <div class="lbl">Symulacja - widok mozaikowy (opacity 0.70 na baselayerze)</div>
+      <canvas id="mosaic-canvas" style="width:100%;border-radius:6px;display:block;margin-bottom:14px"></canvas>
+      <p class="tx"><strong>Szary delikatnie wybija się poza baselayer</strong> - i o to chodzi. Wartości bliskie zeru (strefa neutralna) nie skupiają uwagi użytkownika, bo są prawie niewidoczne na tle mapy. Oko automatycznie je pomija i skupia się na kolorowych regionach z istotnymi danymi.</p>
+      <p class="tx"><strong>Brak czystego rozdzielenia:</strong> niebieskie i czerwone pixele leżą bezpośrednio obok siebie, tworząc mozaikę. Dlatego każdy pixel musi „bronić się sam" - kolor musi być wystarczająco odmienny, by odbiorca rozpoznał jego stronę skali bez porównywania z sąsiadami.</p>
+      <p class="tx"><strong>Opacity 0.70:</strong> kolory tracą ~30% intensywności względem palety źródłowej. W ciemnej strefie niebieskiej (idx 0–9, efektywne dE=3.6) sąsiednie stepy zlewają się przy małym powiększeniu - kompromis wynikający z ograniczeń gamutu sRGB.</p>
+    </div>
+  </section>
+
+  <!-- ===== 08 ===== -->
+  <section class="sec fade-in" id="result">
+    <div class="sec-head"><span class="sec-num">08 //</span><h2>Paleta końcowa</h2></div>
+
+    <p class="tx">Opracowanie powstało na podstawie mapy migracyjnej, ale nie jest to skala tylko dla tej mapy. Ogólne założenia przyjęte w tym opracowaniu będą transponowane na wszystkie mapy w dashboardzie CliC:ME - z dalszymi ewentualnymi korektami zakresów i progów dla innych scope'ów i ich zmiennych.</p>
+
+    <div class="card fade-in" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div class="lbl" style="margin-bottom:0">Paleta końcowa - 33 stepy</div>
+        <span class="tbl-toggle" id="hex-toggle-btn" onclick="toggleHexTable()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Pokaż pełną tabelę
+        </span>
+      </div>
+      <div id="hex-table-wrap" style="display:none;margin-bottom:12px">
+        <p class="tx" style="font-size:12px;color:var(--dimmer);margin-bottom:12px">Kolory poniżej to wartości źródłowe palety. Na mapie nakładane z <strong>opacity 0.70</strong> na baselayer. Kliknij w kosteczkę lub wartość, żeby skopiować.</p>
+        <div style="display:grid;grid-template-columns:32px 1fr 1fr;gap:0;font-size:12px;font-family:var(--mono);">
+          <div class="mono-tbl-head">idx</div>
+          <div class="mono-tbl-head">Hex (pełny kolor)</div>
+          <div class="mono-tbl-head">Render na mapie</div>
+        </div>
+        <div id="hex-table"></div>
+        <div style="text-align:center;padding-top:14px">
+          <span class="tbl-toggle" onclick="toggleHexTable();document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            Ukryj tabelę
+          </span>
+        </div>
+      </div>
+      <div class="grad" id="g-final" style="height:48px"></div>
+      <div class="grad-ends"><span>−1000 (wart. ujemne)</span><span class="neutral">NEUTRAL</span><span>+1000 (wart. dodatnie)</span></div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Profil L* (jasność) i C* (chroma)</div>
+      <div style="position:relative">
+        <svg id="svg-lc" style="display:block;width:100%;height:120px"></svg>
+        <div id="tt-lc" style="display:none;position:absolute;pointer-events:none;background:rgba(255,255,255,0.97);border:1px solid var(--card-border);border-radius:7px;padding:8px 10px;box-shadow:0 2px 10px rgba(0,0,0,0.13);font-size:11px;white-space:nowrap;z-index:10;font-family:var(--sans)"></div>
+      </div>
+      <p class="note-10" style="margin-top:6px">Ciemna linia: jasność (L*) - symetryczny profil ze szczytem na szarym (L*=94). Fioletowa przerywana: chroma (C*) - szary ma C*=0, co wizualnie separuje strony.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl"><span class="de-fix">dE</span> między sąsiednimi stepami</div>
+      <div style="position:relative">
+        <svg id="svg-de" style="display:block;width:100%;height:160px"></svg>
+        <div id="tt-de" style="display:none;position:absolute;pointer-events:none;background:rgba(255,255,255,0.97);border:1px solid var(--card-border);border-radius:7px;padding:8px 10px;box-shadow:0 2px 10px rgba(0,0,0,0.13);font-size:11px;white-space:nowrap;z-index:10;font-family:var(--sans)"></div>
+      </div>
+      <div class="legend" style="margin-top:8px">
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(26,107,69,0.7)"></div><span class="legend-text">dE 5+ (oczywiste)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(176,106,0,0.7)"></div><span class="legend-text">dE 3–5 (widoczne)</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(176,48,32,0.7)"></div><span class="legend-text">dE poniżej 3</span></div>
+      </div>
+      <p class="note-10" style="margin-top:8px">Wysokie słupki przy idx 15–16 i 16–17 to przejścia kolor/szary (dE=45.8 i 51.7) - celowy ostry próg oddzielający strony.</p>
+    </div>
+
+    <div class="grid4">
+      <div class="card stat fade-in"><div class="stat-val">33</div><div class="stat-lbl">Steps</div></div>
+      <div class="card stat fade-in"><div class="stat-val">10.8</div><div class="stat-lbl">Avg <span class="de-fix">dE</span> mid (paleta)</div></div>
+      <div class="card stat fade-in"><div class="stat-val">9.3</div><div class="stat-lbl">Avg <span class="de-fix">dE</span> mid (mapa)</div></div>
+      <div class="card stat fade-in"><div class="stat-val">0.70</div><div class="stat-lbl">Opacity</div></div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Mapowanie wartości na kolory (rozkład równomierny, −1K do +1K)</div>
+      <div style="display:flex;gap:1px;align-items:end;margin-bottom:4px" id="breakpoint-strip"></div>
+      <div style="display:flex;gap:1px;margin-bottom:2px" id="breakpoint-vals"></div>
+      <div style="display:flex;gap:2px;margin-bottom:10px;margin-top:4px" id="breakpoint-zones"></div>
+      <p class="tx" style="margin-top:20px">Roboczy zakres danych: −1000 do +1000. Strefa neutralna to −60 do +60 - szary <span style="white-space:nowrap"><span class="csw" style="background:#EDEDED"></span><code>#EDEDED</code></span> (idx 16) mapuje wartość 0. Kolory po obu stronach rozłożone równomiernie: 16 niebieskich od −1000 do −60, 16 czerwonych od +60 do +1000, z krokiem ~62.67 jednostki.</p>
+      <p class="tx">Strefy <strong>dark</strong> (idx 0–9, 23–32) osiągają efektywne dE 3.6 / 5.9 na mapie - blisko progu widoczności. Strefy <strong>mid</strong> (idx 10–15, 17–22) dzięki optymalizacji hue: dE 8.2 / 10.4 - komfortowo powyżej. Docelowo progi danych będą przypisywane automatycznie per scope i variable.</p>
+    </div>
+
+    <div class="co green"><span class="co-icon">✓</span> Sama zmiana ze skali zielono-czerwonej na niebiesko-czerwoną to dobry kierunek w kontekście dostępności - skala z osią jasności jako głównym nośnikiem informacji jest znacznie czytelniejsza dla osób z zaburzeniami widzenia barw czerwono-zielonych.</div>
+  </section>
+
+  <!-- ===== 09 ===== -->
+  <section class="sec fade-in" id="subscales">
+    <div class="sec-head"><span class="sec-num">09 //</span><h2>Adaptacja skali dla scope'ów o niepełnym zakresie</h2></div>
+
+    <p class="tx">Pełna paleta 33 stepów to master scale - zaprojektowana dla danych dywergentnych (od minus do plus przez zero). W praktyce poszczególne scope'y i zmienne dashboardu CliC:ME operują na wycinkach tej skali: tylko wartości dodatnie (np. 0–100%), tylko ujemne, albo wąski zakres wokół jednego końca. Zasada jest prosta: <strong>szary <span style="white-space:nowrap"><span class="csw" style="background:#EDEDED"></span><code>#EDEDED</code></span> (idx 16) zawsze oznacza wartość bazową/zerową</strong>, a scope bierze odpowiedni fragment palety.</p>
+
+    <div class="card fade-in">
+      <div class="lbl">Tylko wartości dodatnie (0 → max) - idx 16–32, 17 stepów</div>
+      <div style="display:flex;gap:1px;align-items:end;margin-bottom:4px" id="sub-pos-strip"></div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--ghost);font-family:var(--mono)"><span>0</span><span>max</span></div>
+      <p class="tx" style="margin-top:8px">Np. dane procentowe 0–100%. Szary = brak zjawiska, ciemny czerwony = maksymalna intensywność. Pełne 17 stepów strony czerwonej zachowuje oryginalne przejścia dE.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Tylko wartości ujemne (min → 0) - idx 0–16, 17 stepów</div>
+      <div style="display:flex;gap:1px;align-items:end;margin-bottom:4px" id="sub-neg-strip"></div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--ghost);font-family:var(--mono)"><span>min</span><span>0</span></div>
+      <p class="tx" style="margin-top:8px">Np. spadki, odpływy - im ciemniejszy niebieski, tym silniejsze zjawisko. Szary po prawej = wartość bazowa.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Wąski zakres dodatni (0 → 50% max) - idx 16–24, 9 stepów</div>
+      <div style="display:flex;gap:1px;align-items:end;margin-bottom:4px" id="sub-narrow-strip"></div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--ghost);font-family:var(--mono)"><span>0</span><span>50% max</span></div>
+      <p class="tx" style="margin-top:8px">Przy wąskim wycinku mniej stepów = wyższe dE między sąsiednimi = lepsza czytelność na mapie. Kompromisem jest mniejsza granulacja danych.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Wąski zakres ujemny (50% min → 0) - idx 8–16, 9 stepów</div>
+      <div style="display:flex;gap:1px;align-items:end;margin-bottom:4px" id="sub-narrow-neg-strip"></div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--ghost);font-family:var(--mono)"><span>50% min</span><span>0</span></div>
+      <p class="tx" style="margin-top:8px">Lustrzany odpowiednik wąskiego zakresu czerwonego. Szary po prawej = wartość bazowa, ciemniejszy niebieski = silniejsze zjawisko ujemne.</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="lbl">Symulacja mozaiki - positive-only vs negative-only (opacity 0.70 na baselayerze)</div>
+      <div style="display:flex;gap:12px">
+        <div style="flex:1">
+          <div class="lbl" style="margin-bottom:6px">Positive-only (0 → max)</div>
+          <canvas id="mosaic-pos" style="width:100%;border-radius:6px;border:1px solid var(--card-border)"></canvas>
+        </div>
+        <div style="flex:1">
+          <div class="lbl" style="margin-bottom:6px">Negative-only (min → 0)</div>
+          <canvas id="mosaic-neg" style="width:100%;border-radius:6px;border:1px solid var(--card-border)"></canvas>
+        </div>
+      </div>
+      <p class="tx" style="margin-top:10px">Obie mozaiki renderowane z opacity 0.70 na baselayerze lądu. Białe luki = brak danych. Kolory wycinka zachowują identyczne właściwości percepcyjne jak w pełnej skali - szary zawsze separuje strefę zerową.</p>
+    </div>
+
+    <div class="co amber"><span class="co-icon">⚠</span> Przy bardzo wąskich wycinkach (poniżej 8 stepów) warto rozważyć resampling - ponowne rozłożenie kolorów z większym krokiem dE, zamiast brać fragment palety 1:1. To wymaga osobnej kalibracji per scope.</div>
+  </section>
+
+  <footer class="footer">
+    <span class="f-title">CliC:ME Dashboard</span><span class="f-sep">&middot;</span>Color System<span class="f-sep">&middot;</span>Divergent Color Scale<br>
+    33 stepy &middot; CIE Lab optimised &middot; opacity 0.70 &middot; breakpoints &minus;1000/+1000<br>
+    Made by <a href="https://autentika.com" class="f-link" target="_blank">Autentika</a>
+  </footer>
+
+</div>
+
+<div class="toast" id="copy-toast"></div>
+
+<script>
+// === COLOR MATH ===
+const FIN=["#0C0343","#070B51","#001361","#001A6E","#00227A","#002B88","#003596","#003FA2","#004AAE","#0054B8","#0061C6","#0074D9","#0089F0","#009EFC","#00B2FF","#4DC3FF","#EDEDED","#FEA274","#F98657","#EF663D","#E64328","#DC1915","#D7000B","#D0000E","#C20011","#B50011","#A70012","#960011","#840012","#730011","#610010","#4F010E","#3E040B"];
+
+function h2r(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function sLin(c){c/=255;return c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4;}
+function r2lab(r,g,b){const rl=sLin(r),gl=sLin(g),bl=sLin(b);const x=(0.4124564*rl+0.3575761*gl+0.1804375*bl)/0.95047,y=0.2126729*rl+0.7151522*gl+0.072175*bl,z=(0.0193339*rl+0.119192*gl+0.9503041*bl)/1.08883;const f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;return[116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))];}
+function lch(hex){const[L,a,b]=r2lab(...h2r(hex));return{L,C:Math.sqrt(a*a+b*b),h:((Math.atan2(b,a)*180/Math.PI)+360)%360};}
+function dE(h1,h2){const a=r2lab(...h2r(h1)),b=r2lab(...h2r(h2));return Math.sqrt(a.reduce((s,v,i)=>s+(v-b[i])**2,0));}
+
+function makeGrad(id,colors,h){
+  const el=document.getElementById(id);if(!el)return;
+  const g=colors.map((c,i)=>c+' '+(i/(colors.length-1)*100).toFixed(1)+'%').join(', ');
+  el.style.background='linear-gradient(to right, '+g+')';
+  if(h)el.style.height=h+'px';
+}
+function makeSw(id,colors){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=colors.map(c=>'<div class="sw-item" style="background:'+c+'"></div>').join('');
+}
+function makeHue(id,colors){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=colors.map(c=>{const info=lch(c);return'<div class="hs-item"><div class="hs-swatch" style="background:'+c+'"></div><div class="hs-val">'+info.h.toFixed(0)+'</div></div>';}).join('');
+}
+
+// === TOAST ===
+const toast=document.getElementById('copy-toast');
+let toastTimer;
+function showToast(msg,e){
+  toast.textContent=msg;
+  toast.style.left=(e.clientX+12)+'px';
+  toast.style.top=(e.clientY-30)+'px';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.classList.remove('show'),1200);
+}
+function copyVal(val,e){navigator.clipboard.writeText(val).then(()=>showToast('skopiowano '+val,e));}
+window.copyVal=copyVal;
+
+// === HEX TABLE TOGGLE ===
+window.toggleHexTable=function(){
+  const t=document.getElementById('hex-table-wrap'),b=document.getElementById('hex-toggle-btn');
+  const isOpen=t.style.display!=='none';
+  t.style.display=isOpen?'none':'block';
+  b.innerHTML=isOpen?
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Pokaż pełną tabelę':
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Ukryj tabelę';
+};
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // === NAV ===
+  const sIds=['proposals','vs02','extension','perception','lut','opacity','mosaic','result','subscales'];
+  const navBtns=document.querySelectorAll('.nav button');
+  const navEl=document.getElementById('nav');
+  const navMap={};
+  function getOff(){return navEl?navEl.getBoundingClientRect().height+16:80;}
+  function scrollToSec(id){const el=document.getElementById(id);if(!el)return;window.scrollTo({top:Math.max(0,el.getBoundingClientRect().top+window.scrollY-getOff()),behavior:'smooth'});}
+  navBtns.forEach(b=>{navMap[b.dataset.sec]=b;b.addEventListener('click',()=>scrollToSec(b.dataset.sec));});
+  function updateNav(){
+    const off=getOff(),sp=window.scrollY+off,ab=window.innerHeight+window.scrollY>=document.body.offsetHeight-50;
+    let cur=sIds[0],prog=0;
+    if(ab){for(let i=sIds.length-1;i>=0;i--)if(document.getElementById(sIds[i])){cur=sIds[i];break;}prog=100;}
+    else{for(let i=sIds.length-1;i>=0;i--){const el=document.getElementById(sIds[i]);if(el&&el.offsetTop<=sp){cur=sIds[i];const nx=i<sIds.length-1?document.getElementById(sIds[i+1]):null;if(nx){const h=nx.offsetTop-el.offsetTop;if(h>0)prog=Math.min(100,Math.max(0,(sp-el.offsetTop)/h*100));}else{const h=document.body.offsetHeight-el.offsetTop;if(h>0)prog=Math.min(100,Math.max(0,(sp-el.offsetTop)/h*100));}break;}}}
+    navBtns.forEach(b=>{b.classList.remove('on');b.style.setProperty('--prog','0%');});
+    if(navMap[cur]){navMap[cur].classList.add('on');navMap[cur].style.setProperty('--prog',prog.toFixed(1)+'%');}
+  }
+  window.addEventListener('scroll',updateNav,{passive:true});
+  window.addEventListener('resize',updateNav,{passive:true});
+  updateNav();
+
+  // === FADE IN ===
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.04});
+  document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+  // === GRADIENTS ===
+  makeGrad('g-vs01',['#000066','#D9D9D9','#E30613']);
+  makeGrad('g-vs02',['#000066','#0099FF','#D9D9D9','#E30613','#8D1C0C']);
+  makeGrad('g-vs03',['#000066','#0099FF','#73E6D0','#D9D9D9','#E673AB','#E30613','#8D1C0C']);
+  makeGrad('g-vs03exp',['#00EDBF','#000066','#0099FF','#D9D9D9','#E30613','#8D1C0C','#FF3BA2']);
+  makeGrad('g-vs01b',['#000066','#D9D9D9','#E30613']);
+  makeGrad('g-vs02b',['#000066','#0099FF','#D9D9D9','#E30613','#8D1C0C']);
+  makeGrad('g-vs03b',['#000066','#0099FF','#73E6D0','#D9D9D9','#E673AB','#E30613','#8D1C0C']);
+  makeGrad('g-vs03expb',['#00EDBF','#000066','#0099FF','#D9D9D9','#E30613','#8D1C0C','#FF3BA2']);
+  makeGrad('g-final',FIN);
+
+  // === SWATCHES ===
+  makeSw('sw-blue-before',['#000033','#00023D','#000447','#000451','#00035B','#000066']);
+  makeSw('sw-blue-after',FIN.slice(0,10));
+  makeSw('sw-red-before',['#8D1C0C','#701609','#541007','#380B04','#1C0502','#0E0201']);
+  makeSw('sw-red-after',FIN.slice(23));
+  makeSw('sw-lut-blue-before',['#0C0343','#001361','#00227A','#003596','#004AAE','#0061C6','#0089F0','#00B2FF']);
+  makeSw('sw-lut-red-before',['#E30613','#D0000E','#B50011','#960011','#730011','#4F010E','#3E040B']);
+  makeHue('hs-blue-after',FIN.slice(0,16));
+  makeHue('hs-red-after',FIN.slice(17));
+
+  // === OPACITY COMPARE ===
+  const opIdx=[2,6,10,13,15,16,17,19,22,26,30];
+  const opEl=document.getElementById('opacity-compare');
+  opEl.innerHTML=opIdx.map(i=>{const c=FIN[i];return'<div style="flex:1;text-align:center"><div style="height:24px;background:'+c+';border-radius:3px;margin-bottom:2px"></div><div style="height:24px;border-radius:3px;position:relative;overflow:hidden;background:#fffdfb"><div style="position:absolute;inset:0;background:'+c+';opacity:0.70"></div></div></div>';}).join('')+'<div style="display:flex;flex-direction:column;justify-content:center;margin-left:4px;flex-shrink:0"><div style="font-size:8px;color:var(--ghost)">Paleta</div><div style="font-size:8px;color:var(--ghost);margin-top:8px">Na mapie</div></div>';
+
+  // === BREAKPOINT STRIP ===
+  const bpEl=document.getElementById('breakpoint-strip');
+  const bpVals=document.getElementById('breakpoint-vals');
+  bpEl.innerHTML=FIN.map((c,i)=>{
+    const isGray=i===16,isAdj=i===15||i===17;
+    const h=isGray?28:isAdj?22:16;
+    const brd=isGray?'1.5px solid rgba(154,166,178,0.5)':isAdj?'1px solid rgba(154,166,178,0.2)':'none';
+    return'<div style="flex:1"><div style="height:'+h+'px;background:'+c+';border-radius:2px;border:'+brd+'"></div></div>';
+  }).join('');
+  const labels={0:'-1000',15:'-60',16:'0',17:'+60',32:'+1000'};
+  bpVals.innerHTML=FIN.map((c,i)=>{
+    const lbl=labels[i]||'';
+    const w=i===16?'700':'400';
+    const col=i===16?'var(--dim)':'var(--ghost)';
+    return'<div style="flex:1;text-align:center;font-size:7px;font-family:var(--mono);color:'+col+';font-weight:'+w+'">'+lbl+'</div>';
+  }).join('');
+  const zones=[
+    {start:0,end:9,label:'dark blue',color:('var(--blue)'),bg:'var(--blue-bg)',brd:'var(--blue-border)'},
+    {start:10,end:15,label:'mid blue',color:'var(--blue)',bg:'var(--blue-bg)',brd:'var(--blue-border)'},
+    {start:16,end:16,label:'neutral',color:'var(--dimmer)',bg:'var(--surface)',brd:'var(--card-border)'},
+    {start:17,end:22,label:'mid red',color:'var(--red)',bg:'var(--red-bg)',brd:'var(--red-border)'},
+    {start:23,end:32,label:'dark red',color:'var(--red)',bg:'var(--red-bg)',brd:'var(--red-border)'}
+  ];
+  document.getElementById('breakpoint-zones').innerHTML=zones.map(z=>{
+    const span=z.end-z.start+1;
+    return'<div style="flex:'+span+';text-align:center;font-size:8px;font-weight:700;font-family:var(--mono);color:'+z.color+';background:'+z.bg+';border:1px solid '+z.brd+';border-radius:4px;padding:3px 0">'+z.label+'</div>';
+  }).join('');
+
+  // === SVG L*/C* + dE - z DS prototype (z tooltipami) ===
+  const MAP_OPACITY = 0.70;
+
+  requestAnimationFrame(function(){
+
+  // SVG L*/C*
+  (function(){
+    const svg=document.getElementById('svg-lc');
+    if(!svg)return;
+    const W=svg.clientWidth||900,H=120,PL=36,PR=8,PT=14,PB=14,inner=W-PL-PR;
+    let html='';
+    [0,25,50,75,100].forEach(v=>{
+      const y=PT+(1-v/100)*(H-PT-PB);
+      html+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y.toFixed(1)+'" stroke="rgba(0,0,0,0.06)"/>';
+      html+='<text x="'+(PL-4)+'" y="'+(y+3).toFixed(1)+'" font-size="7" fill="var(--ghost)" text-anchor="end" font-family="var(--mono)">'+v+'</text>';
+    });
+    let pathC='',pathL='';
+    FIN.forEach((c,i)=>{
+      const info=lch(c);
+      const px=PL+(i/32)*inner,pyC=PT+(1-info.C/100)*(H-PT-PB),pyL=PT+(1-info.L/100)*(H-PT-PB);
+      pathC+=(i?'L':'M')+px.toFixed(1)+','+pyC.toFixed(1);
+      pathL+=(i?'L':'M')+px.toFixed(1)+','+pyL.toFixed(1);
+    });
+    html+='<path d="'+pathC+'" fill="none" stroke="rgba(124,58,237,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    html+='<path d="'+pathL+'" fill="none" stroke="var(--fg)" stroke-width="2" stroke-opacity="0.7"/>';
+    FIN.forEach((c,i)=>{
+      const info=lch(c);
+      const px=PL+(i/32)*inner,py=PT+(1-info.L/100)*(H-PT-PB);
+      html+='<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="2.5" fill="'+c+'" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>';
+    });
+    html+='<text x="'+(W-PR)+'" y="11" font-size="7" fill="var(--ghost)" text-anchor="end">solid: L*  ···  dashed: C*</text>';
+    FIN.forEach((c,i)=>{
+      const info=lch(c);
+      const px=PL+(i/32)*inner,py=PT+(1-info.L/100)*(H-PT-PB);
+      html+='<circle class="lc-hit" cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="8" fill="transparent" data-idx="'+i+'" style="cursor:pointer"/>';
+    });
+    svg.innerHTML=html;
+    const ttLC=document.getElementById('tt-lc');
+    svg.querySelectorAll('.lc-hit').forEach(el=>{
+      el.addEventListener('mouseenter', e=>{
+        const i=+el.dataset.idx, hex=FIN[i], info=lch(hex);
+        ttLC.innerHTML=`<div style="display:flex;align-items:flex-start;gap:9px">
+          <div style="width:24px;height:24px;border-radius:4px;background:${hex};border:1px solid rgba(0,0,0,0.15);flex-shrink:0;margin-top:2px"></div>
+          <div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:12px;color:var(--accent);margin-bottom:4px">${hex} <span style="color:var(--ghost);font-weight:400">· step #${i}</span></div>
+            <div style="font-size:11px;color:var(--dim);margin-bottom:2px">L* = <b style="color:var(--fg)">${info.L.toFixed(1)}</b> · C* = <b style="color:var(--fg)">${info.C.toFixed(1)}</b></div>
+            <div style="font-size:11px;color:var(--dim)">hue = <b style="color:var(--fg)">${info.h.toFixed(0)}°</b></div>
+          </div></div>`;
+        ttLC.style.display='block';
+      });
+      el.addEventListener('mousemove', e=>{
+        const svgRect=svg.parentElement.getBoundingClientRect();
+        let left=e.clientX-svgRect.left+14, top=e.clientY-svgRect.top-36;
+        if(left+ttLC.offsetWidth>svgRect.width-8) left=e.clientX-svgRect.left-ttLC.offsetWidth-14;
+        ttLC.style.left=left+'px'; ttLC.style.top=top+'px';
+      });
+      el.addEventListener('mouseleave',()=>{ ttLC.style.display='none'; });
+    });
+  })();
+
+  // SVG dE bars
+  (function(){
+    const svg=document.getElementById('svg-de');
+    if(!svg)return;
+    const W=svg.clientWidth||900,H=160,PL=36,PR=8,PT=14,PB=10,inner=W-PL-PR;
+    let html='';
+    [5,10,15,20,30,40,50].forEach(v=>{
+      const y=PT+(1-v/55)*(H-PT-PB);
+      const major=v%10===0;
+      html+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y.toFixed(1)+'" stroke="rgba(0,0,0,'+(major?'0.09':'0.04')+')" />';
+      html+='<text x="'+(PL-4)+'" y="'+(y+3).toFixed(1)+'" font-size="7" fill="var(--'+(major?'dimmer':'ghost')+')" text-anchor="end" font-family="var(--mono)">'+v+'</text>';
+    });
+    const jndY=PT+(1-3/55)*(H-PT-PB);
+    html+='<line x1="'+PL+'" y1="'+jndY.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+jndY.toFixed(1)+'" stroke="rgba(176,48,32,0.35)" stroke-dasharray="3,3"/>';
+    html+='<text x="'+(W-PR+2)+'" y="'+(jndY+3).toFixed(1)+'" font-size="6" fill="rgba(176,48,32,0.6)">JND</text>';
+    const bw=inner/32-1;
+    FIN.slice(0,-1).forEach((c,j)=>{
+      const d=dE(FIN[j],FIN[j+1]);
+      const bh=Math.min((d/55)*(H-PT-PB),H-PT-PB);
+      const x=PL+(j/32)*inner;
+      const isGr=j===15||j===16;
+      let col='rgba(26,107,69,0.65)';
+      if(isGr)col='rgba(0,0,0,0.1)';
+      else if(d<3)col='rgba(176,48,32,0.65)';
+      else if(d<5)col='rgba(176,106,0,0.65)';
+      html+='<rect x="'+x.toFixed(1)+'" y="'+(PT+H-PT-PB-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="'+col+'" rx="1"/>';
+      html+='<rect class="de-hit" x="'+x.toFixed(1)+'" y="'+PT+'" width="'+bw.toFixed(1)+'" height="'+(H-PT-PB)+'" fill="transparent" data-j="'+j+'" style="cursor:pointer"/>';
+    });
+    svg.innerHTML=html;
+    const ttDE=document.getElementById('tt-de');
+    svg.querySelectorAll('.de-hit').forEach(el=>{
+      el.addEventListener('mouseenter', e=>{
+        const j=+el.dataset.j, val=dE(FIN[j],FIN[j+1]), c1=FIN[j], c2=FIN[j+1];
+        const label=val>=5?`<span style="color:var(--green)">oczywista</span>`:val>=3?`<span style="color:var(--amber)">widoczna</span>`:`<span style="color:var(--red)">blisko progu</span>`;
+        function effColor(hex){
+          const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+          const a=MAP_OPACITY,ia=1-a;
+          return'rgb('+Math.round(r*a+255*ia)+','+Math.round(g*a+253*ia)+','+Math.round(b*a+251*ia)+')';
+        }
+        const e1=effColor(c1), e2=effColor(c2);
+        ttDE.innerHTML=`<div style="display:flex;align-items:flex-start;gap:9px">
+          <div style="flex-shrink:0">
+            <div style="display:flex;border-radius:4px;overflow:hidden;border:1px solid rgba(0,0,0,0.12)">
+              <div style="width:22px;height:32px;background:${e1}"></div>
+              <div style="width:22px;height:32px;background:${e2}"></div>
+            </div>
+            <div style="font-size:9px;color:var(--ghost);text-align:center;margin-top:3px">na mapie</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:12px;color:var(--accent);margin-bottom:4px">dE = ${val.toFixed(1)} <span style="font-weight:400;font-size:11px">${label}</span></div>
+            <div style="font-size:11px;color:var(--dim);margin-bottom:2px">step <b style="color:var(--fg)">#${j}</b> → <b style="color:var(--fg)">#${j+1}</b></div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--ghost)">${c1} / ${c2}</div>
+          </div></div>`;
+        ttDE.style.display='block';
+      });
+      el.addEventListener('mousemove', e=>{
+        const svgRect=svg.parentElement.getBoundingClientRect();
+        let left=e.clientX-svgRect.left+14, top=e.clientY-svgRect.top-44;
+        if(left+ttDE.offsetWidth>svgRect.width-8) left=e.clientX-svgRect.left-ttDE.offsetWidth-14;
+        ttDE.style.left=left+'px'; ttDE.style.top=top+'px';
+      });
+      el.addEventListener('mouseleave',()=>{ ttDE.style.display='none'; });
+    });
+  })();
+
+  }); // end requestAnimationFrame
+
+  // === MOSAIC ===
+  const cv=document.getElementById('mosaic-canvas');
+  if(cv){
+    const px=10,step=px;
+    const cols=Math.floor(540/step),rows=32;
+    cv.width=cols*step;cv.height=rows*step;
+    cv.style.imageRendering='pixelated';
+    const ctx=cv.getContext('2d');
+    const bg=[255,253,251];
+    let seed=42;
+    function rand(){seed=(seed*16807+0)%2147483647;return(seed-1)/2147483646;}
+    function randN(){return(rand()+rand()+rand()-1.5)*1.15;}
+    const blobs=[];
+    for(let i=0;i<35;i++){blobs.push({x:rand(),y:rand(),r:0.05+rand()*0.2,sign:rand()<0.45?-1:1,strength:0.3+rand()*0.8});}
+    for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+      const nx=c/cols,ny=r/rows;
+      const covNoise=0.3*Math.sin(nx*9.3+ny*5.1)*Math.cos(ny*7.2-nx*4.8);
+      if(rand()>(0.68+covNoise)){ctx.fillStyle='#fffdfb';ctx.fillRect(c*step,r*step,px,px);continue;}
+      let val=0;
+      for(const b of blobs){const dx=nx-b.x,dy=ny-b.y;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<b.r)val+=b.sign*b.strength*(1-dist/b.r);}
+      val+=0.15*randN();val=Math.max(-1,Math.min(1,val));
+      let idx;
+      if(Math.abs(val)<0.18){idx=16;}
+      else if(val<0){const t=(Math.abs(val)-0.18)/(1-0.18);idx=15-Math.round(t*15);idx=Math.max(0,Math.min(15,idx));}
+      else{const t=(val-0.18)/(1-0.18);idx=17+Math.round(t*15);idx=Math.max(17,Math.min(32,idx));}
+      const hx=FIN[idx];
+      const pr=parseInt(hx.slice(1,3),16),pg=parseInt(hx.slice(3,5),16),pb=parseInt(hx.slice(5,7),16);
+      const a=0.70;
+      ctx.fillStyle='rgb('+Math.round(pr*a+bg[0]*(1-a))+','+Math.round(pg*a+bg[1]*(1-a))+','+Math.round(pb*a+bg[2]*(1-a))+')';
+      ctx.fillRect(c*step,r*step,px,px);
+    }}
+    ctx.strokeStyle='rgba(200,180,140,0.3)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,rows*step*0.35);ctx.bezierCurveTo(cols*step*0.3,rows*step*0.32,cols*step*0.6,rows*step*0.4,cols*step,rows*step*0.38);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cols*step*0.45,0);ctx.bezierCurveTo(cols*step*0.47,rows*step*0.3,cols*step*0.5,rows*step*0.6,cols*step*0.48,rows*step);ctx.stroke();
+    ctx.strokeStyle='rgba(120,120,120,0.2)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cols*step*0.25,0);ctx.bezierCurveTo(cols*step*0.28,rows*step*0.4,cols*step*0.35,rows*step*0.6,cols*step*0.3,rows*step);ctx.stroke();
+  }
+
+  // === SUBSCALE STRIPS ===
+  function makeSubStrip(elId,indices){
+    const el=document.getElementById(elId);if(!el)return;
+    const bg=[255,253,251];
+    el.innerHTML=indices.map(i=>{
+      const c=FIN[i];
+      const pr=parseInt(c.slice(1,3),16),pg=parseInt(c.slice(3,5),16),pb=parseInt(c.slice(5,7),16);
+      const a=0.70;
+      const eff='rgb('+Math.round(pr*a+bg[0]*(1-a))+','+Math.round(pg*a+bg[1]*(1-a))+','+Math.round(pb*a+bg[2]*(1-a))+')';
+      const isGray=i===16;
+      const h=isGray?24:16;
+      const brd=isGray?'1.5px solid rgba(154,166,178,0.4)':'none';
+      return'<div style="flex:1"><div style="height:'+h+'px;background:'+eff+';border-radius:2px;border:'+brd+'"></div></div>';
+    }).join('');
+  }
+  makeSubStrip('sub-pos-strip',Array.from({length:17},(_,i)=>i+16));
+  makeSubStrip('sub-neg-strip',Array.from({length:17},(_,i)=>i));
+  makeSubStrip('sub-narrow-strip',Array.from({length:9},(_,i)=>i+16));
+  makeSubStrip('sub-narrow-neg-strip',Array.from({length:9},(_,i)=>i+8));
+
+  // === MINI MOSAICS ===
+  function makeMiniMosaic(canvasId,mode){
+    const cv=document.getElementById(canvasId);if(!cv)return;
+    const px=8,step=px;
+    const cols=Math.floor(260/step),rows=22;
+    cv.width=cols*step;cv.height=rows*step;
+    cv.style.imageRendering='pixelated';
+    const ctx=cv.getContext('2d');
+    const bg=[255,253,251];
+    let seed=mode==='pos'?73:137;
+    function rand(){seed=(seed*16807+0)%2147483647;return(seed-1)/2147483646;}
+    function randN(){return(rand()+rand()+rand()-1.5)*1.15;}
+    const blobs=[];for(let i=0;i<25;i++){blobs.push({x:rand(),y:rand(),r:0.06+rand()*0.22,strength:0.2+rand()*0.9});}
+    for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+      const nx=c/cols,ny=r/rows;
+      const covNoise=0.3*Math.sin(nx*9.3+ny*5.1)*Math.cos(ny*7.2-nx*4.8);
+      if(rand()>(0.68+covNoise)){ctx.fillStyle='#fffdfb';ctx.fillRect(c*step,r*step,px,px);continue;}
+      let val=0;for(const b of blobs){const dx=nx-b.x,dy=ny-b.y;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<b.r)val+=b.strength*(1-dist/b.r);}
+      val+=0.1*randN();val=Math.max(0,Math.min(1,val));
+      let idx;
+      if(val<0.12){idx=16;}
+      else if(mode==='pos'){const t=(val-0.12)/(1-0.12);idx=17+Math.round(t*15);idx=Math.max(17,Math.min(32,idx));}
+      else{const t=(val-0.12)/(1-0.12);idx=15-Math.round(t*15);idx=Math.max(0,Math.min(15,idx));}
+      const hx=FIN[idx];
+      const pr=parseInt(hx.slice(1,3),16),pg=parseInt(hx.slice(3,5),16),pb=parseInt(hx.slice(5,7),16);
+      const a=0.70;
+      ctx.fillStyle='rgb('+Math.round(pr*a+bg[0]*(1-a))+','+Math.round(pg*a+bg[1]*(1-a))+','+Math.round(pb*a+bg[2]*(1-a))+')';
+      ctx.fillRect(c*step,r*step,px,px);
+    }}
+  }
+  makeMiniMosaic('mosaic-pos','pos');
+  makeMiniMosaic('mosaic-neg','neg');
+
+  // === HEX TABLE ===
+  const hexTable=document.getElementById('hex-table');
+  if(hexTable){
+    const bgR=255,bgG=253,bgB=251;
+    hexTable.innerHTML=FIN.map((h,i)=>{
+      const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+      const er=Math.round(r*0.70+bgR*0.30),eg=Math.round(g*0.70+bgG*0.30),eb=Math.round(b*0.70+bgB*0.30);
+      const eff='rgb('+er+','+eg+','+eb+')';
+      const rgba='rgba('+r+','+g+','+b+',0.70)';
+      const isN=i===16;
+      const rowBg=isN?'background:var(--accent-bg);':'';
+      const brd='border-bottom:1px solid var(--line);';
+      return'<div style="display:grid;grid-template-columns:32px 1fr 1fr;gap:0;font-size:12px;font-family:var(--mono);'+brd+rowBg+'">'+
+        '<div style="padding:5px;color:var(--ghost)">'+i+'</div>'+
+        '<div class="tbl-cell" style="padding:5px;display:flex;align-items:center;gap:6px" onclick="copyVal(\''+h+'\',event)"><span class="csw-lg" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:'+h+';flex-shrink:0"></span><span style="color:var(--dim)">'+h+'</span></div>'+
+        '<div class="tbl-cell" style="padding:5px;display:flex;align-items:center;gap:6px" onclick="copyVal(\''+rgba+'\',event)"><span class="csw-lg" style="display:inline-block;width:18px;height:18px;border-radius:3px;background:'+eff+';flex-shrink:0"></span><span style="color:var(--dimmer);font-size:11px">'+rgba+'</span></div>'+
+        '</div>';
+    }).join('');
+  }
+
+  // === CLICK TO COPY INLINE HEX ===
+  document.querySelectorAll('code').forEach(el=>{
+    const t=el.textContent.trim();
+    if(/^#[0-9A-Fa-f]{6}$/.test(t)){el.style.cursor='pointer';el.title='Kliknij by skopiować';el.classList.add('hex-copy');el.addEventListener('click',(e)=>{navigator.clipboard.writeText(t).then(()=>showToast('skopiowano '+t,e));});}
+  });
+  document.querySelectorAll('.csw').forEach(el=>{
+    const code=el.parentElement&&el.parentElement.querySelector('code');
+    if(code){const hex=code.textContent.trim();el.title='Kliknij by skopiować '+hex;el.addEventListener('click',(e)=>{navigator.clipboard.writeText(hex).then(()=>showToast('skopiowano '+hex,e));});}
+  });
+});
+</script>
+</body>
+</html>
