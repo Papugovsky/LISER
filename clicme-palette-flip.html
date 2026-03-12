@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CliC:ME - Odwrócenie palety</title>
+<style>
+  :root {
+    --bg:#f8fafc;--surface:#f0f4f8;--card-bg:rgba(255,255,255,0.84);--card-border:rgba(154,166,178,0.28);--line:rgba(154,166,178,0.18);
+    --fg:#1a2332;--dim:#3d5068;--dimmer:#5e7590;--faint:#7a90a4;--ghost:#8fa3b4;
+    --accent:#3d6b50;--accent-light:#5a8e6a;--accent-bg:rgba(61,107,80,0.08);--accent-border:rgba(61,107,80,0.35);--accent-border-strong:rgba(61,107,80,0.75);
+    --amber:#c47200;--amber-bg:rgba(196,114,0,0.07);--amber-border:rgba(196,114,0,0.22);
+    --blue:#1e56a8;--blue-bg:rgba(30,86,168,0.07);--blue-border:rgba(30,86,168,0.20);
+    --red:#cc2010;--red-bg:rgba(204,32,16,0.07);--red-border:rgba(204,32,16,0.22);
+    --mono:'Courier New',monospace;--sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+    --grid-line:rgb(188,204,220);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;min-height:100vh;}
+  .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(to right,var(--grid-line) 1px,transparent 1px),linear-gradient(to bottom,var(--grid-line) 1px,transparent 1px);
+    background-size:20px 20px;
+    -webkit-mask-image:repeating-linear-gradient(to right,black 0,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);
+    -webkit-mask-composite:source-in;
+    mask-image:repeating-linear-gradient(to right,black 0,black 3px,transparent 3px,transparent 8px),repeating-linear-gradient(to bottom,black 0,black 3px,transparent 3px,transparent 8px),radial-gradient(ellipse 80% 80% at 0% 100%,#000 50%,transparent 90%);
+    mask-composite:intersect;opacity:0.4;}
+  .xlinks{position:static;height:24px;display:flex;align-items:center;justify-content:center;background:rgba(240,244,248,0.88);border-bottom:1px solid rgba(154,166,178,0.15);}
+  .xlinks a{display:flex;align-items:center;padding:0 14px;height:100%;font-size:0.5625rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ghost);text-decoration:none;border-right:1px solid rgba(154,166,178,0.15);transition:color 0.2s;}
+  .xlinks a:last-child{border-right:none;}
+  .xlinks a:hover{color:var(--dimmer);}
+  .xlinks a.active{color:var(--accent);}
+  .wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:32px 32px 80px;}
+  .tag{font-size:0.625rem;font-weight:500;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-0.03em;line-height:1.15;margin-bottom:6px;}
+  h1 .sub{color:var(--ghost);}
+  .subtitle{font-size:14px;color:var(--dim);line-height:1.7;}
+  .date{font-size:0.75rem;color:var(--faint);margin-top:10px;font-family:var(--mono);}
+  .lbl{font-size:0.625rem;color:var(--faint);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin:0;line-height:1;}
+  .tx{font-size:14px;line-height:1.9;color:var(--dim);margin-bottom:14px;}
+  b,strong{color:var(--fg);font-weight:700;}
+  .fade-in{opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;}
+  .fade-in.visible{opacity:1;transform:translateY(0);}
+  .co{border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.75;color:var(--dim);}
+  .co.amber{background:var(--amber-bg);border:1px solid var(--amber-border);}
+  .co.blue{background:var(--blue-bg);border:1px solid var(--blue-border);}
+  .co-icon{font-weight:800;margin-right:6px;}
+  .co.amber .co-icon{color:var(--amber);}
+  .co.blue .co-icon{color:var(--blue);}
+  .seg-wrap{display:inline-flex;background:var(--surface);border:1px solid var(--card-border);border-radius:7px;padding:3px;gap:1px;}
+  .seg-btn{font-size:0.625rem;font-weight:500;font-family:var(--sans);padding:4px 11px;border:none;background:transparent;color:var(--ghost);border-radius:5px;cursor:pointer;transition:color 0.12s;white-space:nowrap;}
+  .seg-btn:hover{color:var(--dim);}
+  .seg-btn.active{background:#fff;color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);}
+  .pal-strip{height:8px;border-radius:4px;}
+  /* slider */
+  .slider-outer{position:relative;width:100%;border-radius:10px;overflow:hidden;background:var(--surface);border:1px solid var(--card-border);user-select:none;touch-action:none;}
+  .slider-canvas-wrap{position:relative;width:100%;height:600px;overflow:hidden;cursor:grab;user-select:none;background:var(--surface);}
+  .slider-canvas-wrap.panning{cursor:grabbing;}
+  .slider-img{position:absolute;top:0;left:0;width:200%;height:auto;min-height:100%;display:block;will-change:transform;transition:opacity 0.22s ease;pointer-events:none;}
+  .img-orig{z-index:1;}
+  .img-flip{z-index:2;}
+  .slider-divider{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,0.25);z-index:10;pointer-events:none;transform:translateX(-50%);}
+  .slider-handle{position:absolute;top:50%;width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 2px 12px rgba(0,0,0,0.22);z-index:11;display:flex;align-items:center;justify-content:center;cursor:ew-resize;pointer-events:none;transform:translate(-50%,-50%);}
+  .slider-label{position:absolute;top:12px;font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;backdrop-filter:blur(4px);pointer-events:none;z-index:9;transition:opacity 0.3s;}
+  .slider-label.orig{left:12px;background:rgba(30,86,168,0.82);color:#fff;}
+  .slider-label.flip{right:12px;background:rgba(204,32,16,0.82);color:#fff;}
+  .pan-hint{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.72);color:#fff;font-size:10px;font-weight:700;font-family:var(--mono);padding:5px 12px;border-radius:5px;backdrop-filter:blur(4px);pointer-events:none;letter-spacing:0.04em;animation:hint-pulse 2s ease-in-out infinite;transition:opacity 0.4s;z-index:12;}
+  .slider-canvas-wrap.panning .pan-hint{opacity:0!important;}
+  @keyframes hint-pulse{0%,100%{opacity:0.85;}50%{opacity:0.5;}}
+  .pal-footer{display:flex;border-top:1px solid var(--card-border);}
+  .pal-box{flex:1;padding:10px 14px;background:var(--card-bg);}
+  .pal-box:first-child{border-right:1px solid var(--card-border);}
+  .pal-box-title{font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;}
+  .pal-box:first-child .pal-box-title{color:var(--blue);}
+  .pal-box:last-child .pal-box-title{color:var(--red);}
+  .footer{text-align:center;padding:28px 0 36px;border-top:1px solid var(--line);font-size:10px;color:var(--ghost);line-height:2.0;font-family:var(--mono);}
+  .footer .f-title{color:var(--dimmer);}
+  .footer .f-sep{color:var(--faint);padding:0 5px;}
+  .footer .f-link{color:var(--dim);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+  @media(max-width:700px){.wrap{padding:20px 16px 60px;}.slider-canvas-wrap{height:280px;}.pal-footer{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<nav class="xlinks">
+  <a href="clicme-pixel-color-system.html">&#9312; Color System</a>
+  <a href="clicme-pixel-color-scale-reference.html">&#9313; Skala kolorystyczna</a>
+  <a href="clicme-scale-comparison-live.html">&#9314; Porownanie live</a>
+  <a href="clicme-palette-flip.html" class="active">&#9315; Odwrócenie palety</a>
+</nav>
+<div class="wrap">
+
+  <header style="margin-bottom:40px;padding-top:20px;">
+    <div class="tag">CliC:ME · Net Migration · Palette Flip</div>
+    <h1>Odwrócenie palety<br><span class="sub">blue-red vs red-blue</span></h1>
+    <div class="subtitle">Konwencja kartograficzna tradycyjnie wiąże niebieski z wartościami ujemnymi, a czerwony z dodatnimi. W kontekście dashboardu CliC:ME ta konwencja okazała się niewystarczająca - większość analizowanych wymiarów (np. wyludnianie, spadek GDP) to zjawiska negatywne wyrażone wartościami ujemnymi. Niebieski nie komunikuje zagrożenia. Odwrócenie skali - czerwony jako sygnał ostrzegawczy po stronie ujemnej - sprawia, że regiony dotknięte niekorzystnymi zmianami natychmiast przyciągają uwagę, bez konieczności sięgania do legendy. To świadoma decyzja kosztem zgodności z konwencją kartograficzną, podyktowana specyfiką danych i priorytetem komunikacyjnym dashboardu.</div>
+    <div class="date">// 33 stepy · dywergentna · czerwony = wartości ujemne · niebieski = wartości dodatnie</div>
+  </header>
+
+  <p class="tx fade-in" style="margin-bottom:48px;">Jedynym wymiarem, w którym ta inwersja działa "pod prąd", jest <strong>poverty level</strong> - tam wartości ujemne oznaczają spadek ubóstwa (pozytywne zjawisko), a czerwony kolor może sugerować zagrożenie. To akceptowany kompromis - reszta wymiarów (migration, GDP, population change) zyskuje na czytelności. Niniejsze porównanie stanowi propozycję przyjętą jako wiążącą na obecnym etapie projektu - finalna weryfikacja nastąpi na wyprodukowanej mapie, gdzie możliwa będzie ocena w rzeczywistym kontekście danych.</p>
+
+  <!-- KONTROLKI -->
+  <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;line-height:1;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="lbl">Kontekst</div>
+      <div class="seg-wrap" id="seg-ctx">
+        <button class="seg-btn active" data-ctx="452030">RCP 4.5 · 2030</button>
+        <button class="seg-btn" data-ctx="702050">RCP 7.0 · 2050</button>
+        <button class="seg-btn" data-ctx="852090">RCP 8.5 · 2090</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="lbl">X-factor</div>
+      <div class="seg-wrap" id="seg-xf">
+        <button class="seg-btn active" data-xf="x1">X=1</button>
+        <button class="seg-btn" data-xf="x8">X=8</button>
+        <button class="seg-btn" data-xf="x24">X=24</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDER -->
+  <div class="slider-outer fade-in" id="slider-outer">
+    <div class="slider-canvas-wrap" id="slider-wrap">
+      <img class="slider-img img-orig" id="img-orig" src="" alt="original">
+      <img class="slider-img img-flip" id="img-flip" src="" alt="flipped">
+      <div class="slider-divider" id="sl-line"></div>
+      <div class="slider-handle" id="sl-handle">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M6 4l-4 5 4 5M12 4l4 5-4 5" stroke="var(--dimmer)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="slider-label orig" id="lbl-orig">Oryginalna</div>
+      <div class="slider-label flip" id="lbl-flip">Odwrócona</div>
+      <div class="pan-hint" id="pan-hint">&#8597;&#8596; przeciągnij by przesunąć mapę</div>
+    </div>
+    <div class="pal-footer">
+      <div class="pal-box">
+        <div class="pal-box-title">Oryginalna HC softclip - ujemne = niebieski</div>
+        <div style="display:flex;height:14px;border-radius:3px;overflow:hidden;margin-bottom:3px;width:100%;">
+          <div style="flex:1;background:#001361"></div><div style="flex:1;background:#002279"></div><div style="flex:1;background:#013291"></div><div style="flex:1;background:#0145A8"></div><div style="flex:1;background:#0158BD"></div><div style="flex:1;background:#006BD0"></div><div style="flex:1;background:#007FE5"></div><div style="flex:1;background:#0191F4"></div><div style="flex:1;background:#01A0FC"></div><div style="flex:1;background:#02ACFE"></div><div style="flex:1;background:#29B7FF"></div><div style="flex:1;background:#4FC3FF"></div><div style="flex:1;background:#78CAFB"></div><div style="flex:1;background:#96D2F8"></div><div style="flex:1;background:#B0DBF5"></div><div style="flex:1;background:#C8E4F3"></div><div style="flex:1;background:#EDEDED"></div><div style="flex:1;background:#F7D9D1"></div><div style="flex:1;background:#F8C9B9"></div><div style="flex:1;background:#FABAA2"></div><div style="flex:1;background:#FCAF8C"></div><div style="flex:1;background:#FEA377"></div><div style="flex:1;background:#FB9163"></div><div style="flex:1;background:#F67D50"></div><div style="flex:1;background:#EF673E"></div><div style="flex:1;background:#E94E2E"></div><div style="flex:1;background:#E1301E"></div><div style="flex:1;background:#CE0D13"></div><div style="flex:1;background:#B60012"></div><div style="flex:1;background:#A00012"></div><div style="flex:1;background:#8A0012"></div><div style="flex:1;background:#750011"></div><div style="flex:1;background:#610010"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7px;color:var(--ghost);font-family:var(--mono);"><span>emigracja (-)</span><span>neutral</span><span>imigracja (+)</span></div>
+      </div>
+      <div class="pal-box">
+        <div class="pal-box-title">Odwrócona HC softclip - ujemne = czerwony</div>
+        <div style="display:flex;height:14px;border-radius:3px;overflow:hidden;margin-bottom:3px;width:100%;">
+          <div style="flex:1;background:#610010"></div><div style="flex:1;background:#750011"></div><div style="flex:1;background:#8A0012"></div><div style="flex:1;background:#A00012"></div><div style="flex:1;background:#B60012"></div><div style="flex:1;background:#CE0D13"></div><div style="flex:1;background:#E1301E"></div><div style="flex:1;background:#E94E2E"></div><div style="flex:1;background:#EF673E"></div><div style="flex:1;background:#F67D50"></div><div style="flex:1;background:#FB9163"></div><div style="flex:1;background:#FEA377"></div><div style="flex:1;background:#FCAF8C"></div><div style="flex:1;background:#FABAA2"></div><div style="flex:1;background:#F8C9B9"></div><div style="flex:1;background:#F7D9D1"></div><div style="flex:1;background:#EDEDED"></div><div style="flex:1;background:#C8E4F3"></div><div style="flex:1;background:#B0DBF5"></div><div style="flex:1;background:#96D2F8"></div><div style="flex:1;background:#78CAFB"></div><div style="flex:1;background:#4FC3FF"></div><div style="flex:1;background:#29B7FF"></div><div style="flex:1;background:#02ACFE"></div><div style="flex:1;background:#01A0FC"></div><div style="flex:1;background:#0191F4"></div><div style="flex:1;background:#007FE5"></div><div style="flex:1;background:#006BD0"></div><div style="flex:1;background:#0158BD"></div><div style="flex:1;background:#0145A8"></div><div style="flex:1;background:#013291"></div><div style="flex:1;background:#002279"></div><div style="flex:1;background:#001361"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7px;color:var(--ghost);font-family:var(--mono);"><span>emigracja (-)</span><span>neutral</span><span>imigracja (+)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="co blue fade-in" style="margin-top:16px;">
+    <span class="co-icon">i</span> Przeciągnij suwak w lewo i w prawo, żeby porównać obie wersje w tym samym miejscu mapy. Poza uchwytem - przesuwasz mapę.
+  </div>
+
+  <div class="co amber fade-in">
+    <span class="co-icon">&#9888;</span> <strong>Konwencja kartograficzna:</strong> w kartografii tematycznej chłodne kolory (niebieski) konwencjonalnie oznaczają wartości ujemne/niskie, ciepłe (czerwony) - dodatnie/wysokie. Odwrócenie tej konwencji wymaga wyraźnej legendy - bez niej część odbiorców może intuicyjnie przeczytać mapę odwrotnie.
+  </div>
+
+  <footer class="footer">
+    <span class="f-title">CliC:ME Dashboard</span><span class="f-sep">&middot;</span>Palette Flip<span class="f-sep">&middot;</span>Oryginalna vs Odwrócona<br>
+    33 stepy &middot; koncepcja odwrócenia polaryzacji<br>
+    Made by <a href="https://autentika.com" class="f-link" target="_blank">Autentika</a>
+  </footer>
+
+</div>
+<script>
+const CTX_MAP = {452030:'452030', 702050:'702050', 852090:'852090'};
+const BASE = 'flip-renders/quant1-hc-softclip-';
+
+let state = {ctx:'452030', xf:'x1'};
+let sliderPct = 50, panX = 0, panY = 0;
+
+function imgSrc(ctx, xf, variant) {
+  return BASE + ctx + '-' + xf + '-' + variant + '.png';
+}
+
+function loadImages() {
+  const orig = document.getElementById('img-orig');
+  const flip = document.getElementById('img-flip');
+  orig.style.opacity = '0.5';
+  flip.style.opacity = '0.5';
+  orig.src = imgSrc(state.ctx, state.xf, 'original');
+  flip.src = imgSrc(state.ctx, state.xf, 'flipped');
+  let loaded = 0;
+  function onLoad() { loaded++; if(loaded>=2){orig.style.opacity='1';flip.style.opacity='1';} }
+  orig.onload = onLoad; flip.onload = onLoad;
+  orig.onerror = ()=>{orig.style.opacity='1';}; flip.onerror = ()=>{flip.style.opacity='1';};
+}
+
+function applyTransform() {
+  const t = 'translate('+panX+'px,'+panY+'px)';
+  document.getElementById('img-orig').style.transform = t;
+  document.getElementById('img-flip').style.transform = t;
+}
+
+function setSlider(pct) {
+  sliderPct = Math.max(2, Math.min(98, pct));
+  const wrap = document.getElementById('slider-wrap');
+  const W = wrap.clientWidth || 800;
+  const xPx = Math.round(W * sliderPct / 100);
+  document.getElementById('sl-line').style.left = xPx + 'px';
+  document.getElementById('sl-handle').style.left = xPx + 'px';
+  const imgW = wrap.clientWidth * 2.0;
+  const clipRight = Math.max(0, imgW - xPx + panX);
+  document.getElementById('img-flip').style.clipPath = 'inset(0 '+clipRight+'px 0 0)';
+  document.getElementById('lbl-orig').style.opacity = sliderPct < 20 ? '0' : '1';
+  document.getElementById('lbl-flip').style.opacity = sliderPct > 80 ? '0' : '1';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const wrap = document.getElementById('slider-wrap');
+  let mode = null, sx = 0, sy = 0, spx = 0, spy = 0;
+  const HIT = 44;
+
+  function handleX() { const r = wrap.getBoundingClientRect(); return r.left + r.width * sliderPct / 100; }
+  function pct(cx) { const r = wrap.getBoundingClientRect(); return (cx - r.left) / r.width * 100; }
+  function clamp(x, y) {
+    const wrapW = wrap.clientWidth;
+    const wrapH = wrap.clientHeight;
+    const imgW = wrapW * 2.0;
+    const imgEl = document.getElementById('img-orig');
+    const imgH = imgEl.naturalHeight ? (imgW / imgEl.naturalWidth * imgEl.naturalHeight) : wrapH * 1.5;
+    const maxX = Math.max(0, imgW - wrapW);
+    const maxY = Math.max(0, imgH - wrapH);
+    return [Math.max(-maxX, Math.min(0, x)), Math.max(-maxY, Math.min(0, y))];
+  }
+
+  function start(cx, cy) {
+    mode = Math.abs(cx - handleX()) < HIT ? 'slider' : 'pan';
+    sx=cx; sy=cy; spx=panX; spy=panY;
+    if(mode==='pan') wrap.classList.add('panning');
+    document.getElementById('pan-hint').style.opacity = '0';
+  }
+  function move(cx, cy) {
+    if(!mode) return;
+    if(mode==='slider') { setSlider(pct(cx)); }
+    else { const[nx,ny]=clamp(spx+(cx-sx),spy+(cy-sy)); panX=nx; panY=ny; applyTransform(); setSlider(sliderPct); }
+  }
+  function end() { mode=null; wrap.classList.remove('panning'); }
+
+  wrap.addEventListener('mousedown', e=>{start(e.clientX,e.clientY);e.preventDefault();});
+  window.addEventListener('mousemove', e=>{if(mode)move(e.clientX,e.clientY);});
+  window.addEventListener('mouseup', end);
+  wrap.addEventListener('touchstart', e=>{start(e.touches[0].clientX,e.touches[0].clientY);e.preventDefault();},{passive:false});
+  window.addEventListener('touchmove', e=>{if(mode)move(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
+  window.addEventListener('touchend', end);
+
+  document.getElementById('seg-ctx').addEventListener('click', e=>{
+    const b=e.target.closest('.seg-btn'); if(!b) return;
+    document.querySelectorAll('#seg-ctx .seg-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); state.ctx=b.dataset.ctx; panX=0; panY=0; applyTransform(); loadImages();
+  });
+  document.getElementById('seg-xf').addEventListener('click', e=>{
+    const b=e.target.closest('.seg-btn'); if(!b) return;
+    document.querySelectorAll('#seg-xf .seg-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); state.xf=b.dataset.xf; panX=0; panY=0; applyTransform(); loadImages();
+  });
+
+  const obs = new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.04});
+  document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+  loadImages();
+  setSlider(50);
+
+  window.addEventListener('resize', ()=>{ setSlider(sliderPct); });
+});
+</script>
+</body>
+</html>
